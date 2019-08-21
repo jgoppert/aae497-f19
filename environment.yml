@@ -10,3 +10,4 @@ dependencies:
   - pytest
   - pydot
   - casadi
+  - jupyterlab
