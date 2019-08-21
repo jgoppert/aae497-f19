@@ -1,0 +1,3 @@
+[submodule "casadi_f16"]
+	path = python/casadi_f16
+	url = git@github.com:jgoppert/casadi_f16
