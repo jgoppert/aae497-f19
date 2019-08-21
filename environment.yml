@@ -1,0 +1,12 @@
+name: aae497-f19
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - numpy
+  - scipy
+  - control
+  - pytest
+  - pydot
+  - casadi
