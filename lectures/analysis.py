@@ -33,8 +33,10 @@ def step_reponse(name, sys, t_vect):
     plt.title(name + ' step response')
 
 
-def bode(name, sys, omega, margins=False):
+def bode(name, sys, omega, margins=False, Hz=False):
     mag, phase, omega = control.bode(sys, omega, Plot=False)
+    if Hz:
+        omega = omega/(2*np.pi)
     mag_dB = 20*np.log10(mag)
     if margins:
         gm, pm, sm, wg, wp, ws = control.stability_margins(sys)
@@ -44,7 +46,10 @@ def bode(name, sys, omega, margins=False):
         plt.hlines(0, omega[0], omega[-1], linestyle='--')
         plt.vlines([wp, wg], np.min(mag_dB), np.max(mag_dB), linestyle='--')
     plt.semilogx(omega, mag_dB)
-    plt.xlabel('rad')
+    if Hz:
+        plt.xlabel('Hz')
+    else:
+        plt.xlabel('rad')
     plt.ylabel('dB')
     plt.grid()
     
@@ -58,7 +63,11 @@ def bode(name, sys, omega, margins=False):
     if margins:
         plt.vlines([wp, wg], np.min(phase_deg), np.max(phase_deg), linestyle='--')
         plt.hlines(-180, omega[0], omega[-1], linestyle='--')
-
+    if Hz:
+        plt.xlabel('Hz')
+    else:
+        plt.xlabel('rad')
+    plt.ylabel('deg')
     plt.grid()
     
 def loop_analysis(name, sys, zeta, wd, k, t_vect, k_vect, omega_vect):
