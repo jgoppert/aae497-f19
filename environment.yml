@@ -1,4 +1,4 @@
-name: casadi_f16
+name: aae497-f19
 channels:
   - conda-forge
   - defaults
