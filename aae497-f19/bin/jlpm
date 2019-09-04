@@ -1,5 +1,4 @@
-#!/home/wlevin/aae497-f19/aae497-f19/bin/python
-
+#!/home/wlevin/aae497-f19/aae497-f19/bin/python3.7
 # -*- coding: utf-8 -*-
 import re
 import sys

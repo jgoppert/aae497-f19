@@ -1338,6 +1338,41 @@ function main() {
       deferred.matches.push('');
       ignorePlugins.push('');
     }
+    if (isDisabled('@jupyterlab/ui-components-extension')) {
+      disabled.matches.push('@jupyterlab/ui-components-extension');
+    } else {
+      extMod = require('@jupyterlab/ui-components-extension/');
+      extension = extMod.default;
+
+      // Handle CommonJS exports.
+      if (!extMod.hasOwnProperty('__esModule')) {
+        extension = extMod;
+      }
+
+      if (Array.isArray(extension)) {
+        extension.forEach(function(plugin) {
+          if (isDeferred(plugin.id)) {
+            deferred.matches.push(plugin.id);
+            ignorePlugins.push(plugin.id);
+          }
+          if (isDisabled(plugin.id)) {
+            disabled.matches.push(plugin.id);
+            return;
+          }
+          register.push(plugin);
+        });
+      } else {
+        register.push(extension);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  try {
+    if (isDeferred('')) {
+      deferred.matches.push('');
+      ignorePlugins.push('');
+    }
     if (isDisabled('@jupyterlab/vdom-extension')) {
       disabled.matches.push('@jupyterlab/vdom-extension');
     } else {
