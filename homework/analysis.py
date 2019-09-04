@@ -25,7 +25,7 @@ def rlocus(name, sys, kvect, k=None):
     plt.grid(True)
     plt.title(name + ' root locus')
 
-def step_reponse(name, sys, t_vect):
+def step_response(name, sys, t_vect):
     t, y = control.step_response(sys, T=t_vect)
     plt.plot(t, y)
     plt.xlabel('t, sec')
