@@ -14,7 +14,6 @@ Class notebook.
 
 ```bash
 conda env create -f environment.yml
-conda activate aae497-f16
-conda install jupyterlab
+conda activate aae497-f19
 jupyter lab
 ```

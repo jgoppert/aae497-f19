@@ -8,8 +8,9 @@ dependencies:
   - numpy
   - scipy
   - control
-  - pytest
   - pydot
+  - autopep8
+  - pytest=5.0.1
   - jupyterlab
   - pip:
     - casadi
