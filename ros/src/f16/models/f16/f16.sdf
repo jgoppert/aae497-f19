@@ -80,6 +80,10 @@
       <pose>-6.5 0 1 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
@@ -119,6 +123,10 @@
       <pose>-9.8 2.5 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
@@ -158,12 +166,16 @@
       <pose>-9.8 -2.5 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
     <link name='rudder'>
       <inertial>
-        <pose>-12.5 0 0 0 0 0</pose>
+        <pose>-13.7 0 0 0 0 0</pose>
         <mass>0.1</mass>
         <inertia>
           <ixx>0.1</ixx>
@@ -194,9 +206,16 @@
     <joint name='rudder' type='revolute'>
       <child>rudder</child>
       <parent>airframe</parent>
-      <pose>-12.5 0 0 0 0 0</pose>
+      <pose>-13.5 0 0 0 0 0</pose>
       <axis>
         <xyz>0 0 1</xyz>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
 
     </joint>
@@ -237,6 +256,10 @@
       <pose>-12.5 1 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
@@ -276,6 +299,10 @@
       <pose>-12.5 -1 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
