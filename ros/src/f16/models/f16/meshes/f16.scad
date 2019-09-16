@@ -48,7 +48,13 @@ module body() {
         [0.05*wingspan,length],
         [0,0.95*length]
     ]);
-    color([0.6, 0.6, 0.8]) translate([-0.3*length, 0, 0.047*length]) rotate([0, 5, 0]) scale([1, 0.3, 0.2]) sphere(0.13*length);
+}
+
+module canopy() {
+    color([0.6, 0.6, 0.8, 0.5]) translate([-0.3*length, 0, 0.044*length]) rotate([0, 4, 0]) scale([0.13*length, 0.039*length, 0.026*length]) difference() {
+       sphere(1);
+       translate([0, 0, -1.5]) cube([3, 3, 3], center=true);
+    }
 }
 
 module airframe_no_cuts() {
@@ -81,6 +87,7 @@ module airframe() {
         elevator_cut(1);
         mirror([0, 1, 0]) elevator_cut(1);
         rudder_cut();
+        translate([-4.5, 0, 0.5]) cube([2, 0.8, 2], center=true); // cockpit
     }
 }
 
@@ -112,12 +119,15 @@ module assembly() {
     rudder();
     elevator();
     mirror([0, 1, 0]) elevator();
+    canopy();
 }
 
 part = "assembly";
 
 if (part == "airframe") {
     airframe();
+} else if (part == "canopy") {
+    canopy();
 } else if (part == "left_aileron") {
     aileron();
 } else if (part == "left_elevator") {
