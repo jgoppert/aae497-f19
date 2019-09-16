@@ -59,13 +59,13 @@
 	
 	<gui fullscreen='0'>
 	  <camera name='user_camera'>
-		<pose>-2 0 2 0 0 0</pose>
+		<pose>30 10 10 0 0 0</pose>
 		<view_controller>orbit</view_controller>
 		<projection_type>perspective</projection_type>
 		<track_visual>
 		  <name>f16</name>
 		  <use_model_frame>1</use_model_frame>
-		  <min_dist>10</min_dist>
+		  <min_dist>1</min_dist>
 		  <max_dist>100</max_dist>
 		</track_visual>
 	  </camera>
