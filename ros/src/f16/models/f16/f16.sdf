@@ -1,0 +1,283 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name="f16">
+
+    <link name='airframe'>
+
+      <inertial>
+        <pose>-8 0 0 0 0 0</pose>
+        <mass>4</mass>
+        <inertia>
+          <ixx>10</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>10</iyy>
+          <iyz>0</iyz>
+          <izz>10</izz>
+        </inertia>
+      </inertial>
+
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/airframe.stl</uri>
+          </mesh>
+        </geometry>
+
+      </collision>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/airframe.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <link name='canopy'>
+      <pose>0 0 0 0 0 0</pose>
+
+      <inertial>
+        <pose>-4.5 0 1 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/canopy.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/BlueTransparent</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='canopy' type='revolute'>
+      <child>canopy</child>
+      <parent>airframe</parent>
+      <pose>-6.5 0 1 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <link name='left_aileron'>
+      <inertial>
+        <pose>-9.8 2.5 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/left_aileron.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='left_aileron' type='revolute'>
+      <child>left_aileron</child>
+      <parent>airframe</parent>
+      <pose>-9.8 2.5 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <link name='right_aileron'>
+      <inertial>
+        <pose>-9.8 -2.5 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/right_aileron.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='right_aileron' type='revolute'>
+      <child>right_aileron</child>
+      <parent>airframe</parent>
+      <pose>-9.8 -2.5 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <link name='rudder'>
+      <inertial>
+        <pose>-12.5 0 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/rudder.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='rudder' type='revolute'>
+      <child>rudder</child>
+      <parent>airframe</parent>
+      <pose>-12.5 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+      </axis>
+
+    </joint>
+
+    <link name='left_elevator'>
+      <inertial>
+        <pose>-12.5 1 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/left_elevator.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='left_elevator' type='revolute'>
+      <child>left_elevator</child>
+      <parent>airframe</parent>
+      <pose>-12.5 1 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <link name='right_elevator'>
+      <inertial>
+        <pose>-12.5 -1 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://f16/meshes/stl/right_elevator.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <joint name='right_elevator' type='revolute'>
+      <child>right_elevator</child>
+      <parent>airframe</parent>
+      <pose>-12.5 -1 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+  </model>
+</sdf>
