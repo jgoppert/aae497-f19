@@ -1,0 +1,39 @@
+syntax = "proto2";
+package gazebo.msgs;
+
+/// \ingroup f16_msgs
+/// \interface F16
+/// \brief F16 message
+
+message F16
+{
+  /// \brief Current left aileron angle in rads.
+  optional float left_aileron = 1;
+
+  /// \brief Current right aileron angle in rads.
+  optional float right_aileron = 2;
+
+  /// \brief Current left elevator angle in rads.
+  optional float left_elevator = 3;
+
+  /// \brief Current right elevator angle in rads.
+  optional float right_elevator = 4;
+
+  /// \brief Current rudder angle in rads.
+  optional float rudder = 5;
+
+  /// \brief Target left aileron angle in rads.
+  optional float cmd_left_aileron = 6;
+
+  /// \brief Target right aileron angle in rads.
+  optional float cmd_right_aileron = 7;
+
+  /// \brief Target left elevator angle in rads.
+  optional float cmd_left_elevator = 8;
+
+  /// \brief Target right elevator angle in rads.
+  optional float cmd_right_elevator = 9;
+
+  /// \brief Target rudder angle in rads.
+  optional float cmd_rudder = 10;
+}
