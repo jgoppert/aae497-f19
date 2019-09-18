@@ -8,6 +8,8 @@ project(f16)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
+find_package(gazebo REQUIRED)
+find_package(Protobuf REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -112,14 +114,41 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+ include
+ ${catkin_INCLUDE_DIRS}
+ ${GAZEBO_INCLUDE_DIRS}
+ ${CMAKE_BINARY_DIR}
 )
 
+# Protobuf library
+#set(PROTOBUF_IMPORT_DIRS)
+#foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+  #if(ITR MATCHES ".*gazebo-[0-9.]+$")
+    #set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+  #endif()
+#endforeach()
+set (msgs
+  src/f16.proto
+  src/rocket.proto
+  #${PROTOBUF_IMPORT_DIRS}/vector2d.proto
+  #${PROTOBUF_IMPORT_DIRS}/header.proto
+  #${PROTOBUF_IMPORT_DIRS}/time.proto
+)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
+
+add_library(f16_msgs SHARED ${PROTO_SRCS})
+target_link_libraries(f16_msgs ${PROTOBUF_LIBRARY})
+
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/f16.cpp
-# )
+add_library(F16Plugin
+	src/F16Plugin/F16Plugin.cc
+)
+target_link_libraries(F16Plugin ${GAZEBO_LIBRARIES} f16_msgs)
+
+add_library(RocketPlugin
+	src/RocketPlugin/RocketPlugin.cc
+)
+target_link_libraries(RocketPlugin ${GAZEBO_LIBRARIES} f16_msgs)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
