@@ -129,6 +129,7 @@ include_directories(
 #endforeach()
 set (msgs
   src/f16.proto
+  src/rocket.proto
   #${PROTOBUF_IMPORT_DIRS}/vector2d.proto
   #${PROTOBUF_IMPORT_DIRS}/header.proto
   #${PROTOBUF_IMPORT_DIRS}/time.proto
@@ -143,6 +144,11 @@ add_library(F16Plugin
 	src/F16Plugin/F16Plugin.cc
 )
 target_link_libraries(F16Plugin ${GAZEBO_LIBRARIES} f16_msgs)
+
+add_library(RocketPlugin
+	src/RocketPlugin/RocketPlugin.cc
+)
+target_link_libraries(RocketPlugin ${GAZEBO_LIBRARIES} f16_msgs)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
