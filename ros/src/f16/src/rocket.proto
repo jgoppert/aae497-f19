@@ -1,0 +1,41 @@
+syntax = "proto2";
+package gazebo.msgs;
+
+/// \ingroup f16_msgs
+/// \interface Rocket
+/// \brief Rocket message
+
+message Rocket
+{
+  /// \brief Mass flow rate
+  optional float mdot = 1;
+
+  /// \brief Fin1 angle in rads.
+  optional float fin1 = 2;
+
+  /// \brief Fin2 angle in rads.
+  optional float fin2 = 3;
+
+  /// \brief Fin3 angle in rads.
+  optional float fin3 = 4;
+
+  /// \brief Fin4 angle in rads.
+  optional float fin4 = 5;
+
+  /// \brief Commanded Mass flow rate
+  optional float cmd_mdot = 6;
+
+  /// \brief Commanded Fin1 angle in rads.
+  optional float cmd_fin1 = 7;
+
+  /// \brief Commanded Fin2 angle in rads.
+  optional float cmd_fin2 = 8;
+
+  /// \brief Commanded Fin3 angle in rads.
+  optional float cmd_fin3 = 9;
+
+  /// \brief Commanded Fin4 angle in rads.
+  optional float cmd_fin4 = 10;
+
+
+}

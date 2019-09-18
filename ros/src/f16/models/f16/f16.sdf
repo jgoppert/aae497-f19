@@ -3,29 +3,16 @@
   <model name="f16">
 
     <link name='airframe'>
-
       <inertial>
-        <pose>-8 0 0 0 0 0</pose>
-        <mass>4</mass>
-        <inertia>
-          <ixx>10</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>10</iyy>
-          <iyz>0</iyz>
-          <izz>10</izz>
-        </inertia>
+        <pose>8 0 0 0 0 0</pose>
       </inertial>
-
       <collision name='collision'>
         <geometry>
           <mesh>
             <uri>model://f16/meshes/stl/airframe.stl</uri>
           </mesh>
         </geometry>
-
       </collision>
-
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -39,25 +26,10 @@
           </script>
         </material>
       </visual>
-
     </link>
 
     <link name='canopy'>
-      <pose>0 0 0 0 0 0</pose>
-
-      <inertial>
-        <pose>-4.5 0 1 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -71,12 +43,11 @@
           </script>
         </material>
       </visual>
-
     </link>
 
-    <joint name='canopy' type='revolute'>
-      <child>canopy</child>
+    <joint name='canopy_joint' type='ball'>
       <parent>airframe</parent>
+      <child>canopy</child>
       <pose>-6.5 0 1 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
@@ -84,19 +55,8 @@
     </joint>
 
     <link name='left_aileron'>
-      <inertial>
-        <pose>-9.8 2.5 0 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -119,23 +79,16 @@
       <pose>-9.8 2.5 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
     <link name='right_aileron'>
-      <inertial>
-        <pose>-9.8 -2.5 0 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -149,7 +102,6 @@
           </script>
         </material>
       </visual>
-
     </link>
 
     <joint name='right_aileron' type='revolute'>
@@ -158,23 +110,16 @@
       <pose>-9.8 -2.5 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
     <link name='rudder'>
-      <inertial>
-        <pose>-12.5 0 0 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -194,27 +139,19 @@
     <joint name='rudder' type='revolute'>
       <child>rudder</child>
       <parent>airframe</parent>
-      <pose>-12.5 0 0 0 0 0</pose>
+      <pose>-13.5 0 0 0 0 0</pose>
       <axis>
         <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
-
     </joint>
 
     <link name='left_elevator'>
-      <inertial>
-        <pose>-12.5 1 0 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -237,23 +174,16 @@
       <pose>-12.5 1 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
     <link name='right_elevator'>
-      <inertial>
-        <pose>-12.5 -1 0 0 0 0</pose>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.1</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.1</iyy>
-          <iyz>0</iyz>
-          <izz>0.1</izz>
-        </inertia>
-      </inertial>
-
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
         <geometry>
@@ -276,8 +206,22 @@
       <pose>-12.5 -1 0 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
       </axis>
     </joint>
 
+  <plugin name="f16_plugin" filename="libF16Plugin.so">
+    <left_aileron>left_aileron</left_aileron>
+    <right_aileron>right_aileron</right_aileron>
+    <left_elevator>left_elevator</left_elevator>
+    <right_elevator>right_elevator</right_elevator>
+    <rudder>rudder</rudder>
+  </plugin>
+
   </model>
 </sdf>
+
+<!-- vim: set et fenc=utf-8 ft=xml ff=unix sts=0 sw=2 ts=2 : -->
