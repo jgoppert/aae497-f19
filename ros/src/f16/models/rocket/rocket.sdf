@@ -1,0 +1,182 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name="rocket">
+
+    <link name='body'>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+      </inertial>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/body.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/body.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name='nose_cone'>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/nose_cone.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='nose_cone' type='fixed'>
+      <child>nose_cone</child>
+      <parent>body</parent>
+    </joint>
+
+    <link name='fin1'>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='fin1' type='revolute'>
+      <child>fin1</child>
+      <parent>body</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <link name='fin2'>
+      <pose>0 0 0 0 0 1.57</pose>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='fin2' type='revolute'>
+      <child>fin2</child>
+      <parent>body</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <link name='fin3'>
+      <pose>0 0 0 0 0 3.14</pose>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='fin3' type='revolute'>
+      <child>fin3</child>
+      <parent>body</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <link name='fin4'>
+      <pose>0 0 0 0 0 -1.57</pose>
+      <visual name='visual'>
+        <cast_shadows>0</cast_shadows>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='fin4' type='revolute'>
+      <child>fin4</child>
+      <parent>body</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+        </limit>
+      </axis>
+    </joint>
+
+      <plugin name="rocket_plugin" filename="libRocketPlugin.so">
+        <body>body</body>
+        <fin1>fin1</fin1>
+        <fin2>fin2</fin2>
+        <fin3>fin3</fin3>
+        <fin4>fin4</fin4>
+      </plugin>
+
+  </model>
+</sdf>
+
+<!-- vim: set et fenc=utf-8 ft=xml ff=unix sts=0 sw=2 ts=2 : -->
