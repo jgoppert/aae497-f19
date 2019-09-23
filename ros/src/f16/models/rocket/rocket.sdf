@@ -96,7 +96,7 @@
       <parent>body</parent>
       <pose>0 0 0.2 0 0 0</pose>
       <axis>
-        <xyz>0 1 0</xyz>
+        <xyz>1 0 0</xyz>
         <limit>
           <lower>-1</lower>
           <upper>1</upper>

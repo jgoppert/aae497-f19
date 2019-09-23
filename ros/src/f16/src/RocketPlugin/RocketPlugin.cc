@@ -133,7 +133,7 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     }
 	float r = 0.1; // nozzle radius
 	float A = M_PI*r*r; // nozzle exit area
-    float ve = 300; // exit velocity, m/s, guess
+    float ve = 320; // exit velocity, m/s, guess
     this->motor->AddRelativeForce(ignition::math::Vector3d(0, 0, m_dot*ve + A*(Pe - P0)));
     inertial->SetMass(m);
     inertial->SetInertiaMatrix(0, 0, 0, 0, 0, 0); // treat as point mass

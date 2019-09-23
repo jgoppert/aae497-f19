@@ -21,8 +21,13 @@
     </include>
 
     <include>
-      <pose>0 0 1 0 1.0 0</pose>
+      <pose>0 0 1 0 0 0</pose>
       <uri>model://rocket</uri>
+    </include>
+
+    <include>
+      <uri>model://radio_tower</uri>
+      <pose>10 10 0 0 0 0</pose>
     </include>
 
     <model name="ground_plane">
@@ -44,23 +49,6 @@
             </friction>
           </surface>
         </collision>
-
-        <visual name="runway">
-          <pose>700 0 0.1 0 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>1829 45</size>
-            </plane>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Runway</name>
-            </script>
-          </material>
-        </visual>
 
         <visual name="grass">
           <pose>0 0 -0.1 0 0 0</pose>
