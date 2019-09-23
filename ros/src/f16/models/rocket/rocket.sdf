@@ -106,6 +106,13 @@
           </script>
         </material>
       </visual>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
     </link>
 
     <joint name='fin1' type='revolute'>
@@ -115,8 +122,8 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
-          <lower>0</lower>
-          <upper>0</upper>
+          <lower>-1</lower>
+          <upper>1</upper>
         </limit>
       </axis>
     </joint>
@@ -164,6 +171,14 @@
           </script>
         </material>
       </visual>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+
     </link>
 
     <joint name='fin2' type='revolute'>
@@ -173,8 +188,8 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
-          <lower>0</lower>
-          <upper>0</upper>
+          <lower>-1</lower>
+          <upper>1</upper>
         </limit>
       </axis>
     </joint>
@@ -222,6 +237,14 @@
           </script>
         </material>
       </visual>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+
     </link>
 
     <joint name='fin3' type='revolute'>
@@ -231,8 +254,8 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
-          <lower>0</lower>
-          <upper>0</upper>
+          <lower>-1</lower>
+          <upper>1</upper>
         </limit>
       </axis>
     </joint>
@@ -280,6 +303,14 @@
           </script>
         </material>
       </visual>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+
     </link>
 
     <joint name='fin4' type='revolute'>
@@ -289,8 +320,8 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
-          <lower>0</lower>
-          <upper>0</upper>
+          <lower>-1</lower>
+          <upper>1</upper>
         </limit>
       </axis>
     </joint>
@@ -317,7 +348,7 @@
     <link name='rocket_motor'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <mass>0.8</mass>
+        <mass>0.00001</mass>
       </inertial>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
@@ -343,6 +374,45 @@
 
     <plugin name="rocket_plugin" filename="libRocketPlugin.so">
       <motor>rocket_motor</motor>
+    </plugin>
+
+    <plugin name="p3d" filename="libgazebo_ros_p3d.so">
+      <bodyName>body</bodyName>
+      <topicName>rocket/ground_truth</topicName>
+      <frameName>world</frameName>
+      <updateRate>100</updateRate>
+    </plugin>
+
+    <plugin name="fin1_torque" filename="libgazebo_ros_force.so">
+      <alwaysOn>true</alwaysOn>
+      <update>100</update>
+      <updateRate>100.0</updateRate>
+      <bodyName>fin1</bodyName>
+      <topicName>rocket/fin1_torque</topicName>
+    </plugin>
+
+    <plugin name="fin2_torque" filename="libgazebo_ros_force.so">
+      <alwaysOn>true</alwaysOn>
+      <update>100</update>
+      <updateRate>100.0</updateRate>
+      <bodyName>fin2</bodyName>
+      <topicName>rocket/fin2_torque</topicName>
+    </plugin>
+
+    <plugin name="fin3_torque" filename="libgazebo_ros_force.so">
+      <alwaysOn>true</alwaysOn>
+      <update>100</update>
+      <updateRate>100.0</updateRate>
+      <bodyName>fin3</bodyName>
+      <topicName>rocket/fin3_torque</topicName>
+    </plugin>
+
+    <plugin name="fin4_torque" filename="libgazebo_ros_force.so">
+      <alwaysOn>true</alwaysOn>
+      <update>100</update>
+      <updateRate>100.0</updateRate>
+      <bodyName>fin4</bodyName>
+      <topicName>rocket/fin4_torque</topicName>
     </plugin>
 
   </model>
