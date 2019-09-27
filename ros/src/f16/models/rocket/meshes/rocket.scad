@@ -15,9 +15,9 @@ module body() {
 
 module fin() {
     color([0.3, 0.3, 0.3]) rotate([90, 0, 0]) linear_extrude(fh, center=true) polygon([
-    [0, fl],
-    [fl, 0],
-    [0, 0]
+    [r+0.01, fl],
+    [r+0.01 + fl, 0],
+    [r+0.01, 0]
     ]);
 }
 

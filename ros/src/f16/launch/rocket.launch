@@ -26,4 +26,6 @@
         <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
     </include>
 
+    <node name="rocket_controller" pkg="f16" type="rocket_controller.py"/>
+
 </launch>
