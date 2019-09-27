@@ -1,3 +1,6 @@
 [submodule "casadi_f16"]
 	path = python/casadi_f16
 	url = https://github.com/jgoppert/casadi_f16.git
+[submodule "python/pyecca"]
+	path = python/pyecca
+	url = git@github.com:jgoppert/pyecca
