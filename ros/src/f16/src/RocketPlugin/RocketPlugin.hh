@@ -30,6 +30,8 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/transport/TransportTypes.hh>
 #include "rocket.pb.h"
+#include "casadi/CasadiFunc.hpp"
+#include "casadi_gen.h"
 
 namespace gazebo
 {
@@ -125,6 +127,9 @@ namespace gazebo
 
     /// \brief Ignition Publisher.
     private: ignition::transport::Node::Publisher statePubIgn;
+
+	/// \brief Our casadi function
+    private: CasadiFunc _double_this;
   };
 }
 #endif
