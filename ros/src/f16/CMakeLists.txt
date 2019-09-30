@@ -115,6 +115,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
  include
+ src
  ${catkin_INCLUDE_DIRS}
  ${GAZEBO_INCLUDE_DIRS}
  ${CMAKE_BINARY_DIR}
@@ -147,8 +148,20 @@ target_link_libraries(F16Plugin ${GAZEBO_LIBRARIES} f16_msgs)
 
 add_library(RocketPlugin
 	src/RocketPlugin/RocketPlugin.cc
+	src/RocketPlugin/casadi_gen.c
 )
 target_link_libraries(RocketPlugin ${GAZEBO_LIBRARIES} f16_msgs)
+
+target_compile_options(RocketPlugin PRIVATE
+	-Wno-missing-declarations
+	-Wno-float-equal
+	-Wno-shadow
+	-Wno-unused-result
+	-Wno-maybe-uninitialized
+	)
+
+target_compile_definitions(RocketPlugin
+	PUBLIC -Dcasadi_int=int -Dcasadi_real=double)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

@@ -31,8 +31,16 @@ using namespace gazebo;
 GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 
 ////////////////////////////////////////////////////////////////////////////////
-RocketPlugin::RocketPlugin()
+RocketPlugin::RocketPlugin():
+	_double_this(double_this_functions())
 {
+	std::cout << "hello rocket plugin" << std::endl;
+	double input = 1;
+	double res = 0;
+	_double_this.arg(0, &input);
+	_double_this.res(0, &res);
+	_double_this.eval();
+	std::cout << "input" << input << "result" << res << std::endl;
 }
 
 /////////////////////////////////////////////////
