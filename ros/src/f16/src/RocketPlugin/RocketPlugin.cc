@@ -32,9 +32,7 @@ GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 
 ////////////////////////////////////////////////////////////////////////////////
 RocketPlugin::RocketPlugin():
-	_double_this(double_this_functions()),
-	_rocket_aero_force(rocket_aero_force_functions()),
-	_rocket_aero_moment(rocket_aero_moment_functions())
+	_double_this(double_this_functions())
 {
 	std::cout << "hello rocket plugin" << std::endl;
 	double input = 1;
