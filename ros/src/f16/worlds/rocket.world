@@ -27,7 +27,7 @@
 
     <include>
       <uri>model://radio_tower</uri>
-      <pose>10 10 0 0 0 0</pose>
+      <pose>15 15 0 0 0 0</pose>
     </include>
 
     <model name="ground_plane">

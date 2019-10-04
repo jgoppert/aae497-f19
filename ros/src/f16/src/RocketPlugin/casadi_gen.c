@@ -14,8 +14,6 @@ extern "C" {
 #endif
 
 #include <math.h>
-#include <stdio.h>
-#include <string.h>
 #include <casadi/mem.h>
 
 #ifndef casadi_real
@@ -29,6 +27,9 @@ extern "C" {
 /* Add prefix to internal symbols */
 #define casadi_f0 CASADI_PREFIX(f0)
 #define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
+#define casadi_s3 CASADI_PREFIX(s3)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -45,17 +46,26 @@ extern "C" {
   #endif
 #endif
 
-static const casadi_int casadi_s0[5] = {1, 1, 0, 1, 0};
+static const casadi_int casadi_s0[18] = {14, 1, 0, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+static const casadi_int casadi_s1[8] = {4, 1, 0, 4, 0, 1, 2, 3};
+static const casadi_int casadi_s2[19] = {15, 1, 0, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+static const casadi_int casadi_s3[7] = {3, 1, 0, 3, 0, 1, 2};
 
-#define CASADI_PRINTF printf
-
-/* double_this:(x)->(y) */
+/* double_this:(x[14],u[4],p[15])->(F_aero[3],F_prop[3]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1;
-  a0=2.;
-  a1=arg[0] ? arg[0][0] : 0;
-  a0=(a0*a1);
+  casadi_real a0;
+  a0=arg[2] ? arg[2][0] : 0;
   if (res[0]!=0) res[0][0]=a0;
+  a0=arg[2] ? arg[2][1] : 0;
+  if (res[0]!=0) res[0][1]=a0;
+  a0=arg[2] ? arg[2][2] : 0;
+  if (res[0]!=0) res[0][2]=a0;
+  a0=arg[0] ? arg[0][3] : 0;
+  if (res[1]!=0) res[1][0]=a0;
+  a0=arg[0] ? arg[0][4] : 0;
+  if (res[1]!=0) res[1][1]=a0;
+  a0=arg[0] ? arg[0][5] : 0;
+  if (res[1]!=0) res[1][2]=a0;
   return 0;
 }
 
@@ -69,20 +79,23 @@ CASADI_SYMBOL_EXPORT void double_this_incref(void) {
 CASADI_SYMBOL_EXPORT void double_this_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int double_this_n_in(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int double_this_n_in(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT casadi_int double_this_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int double_this_n_out(void) { return 2;}
 
 CASADI_SYMBOL_EXPORT const char* double_this_name_in(casadi_int i){
   switch (i) {
     case 0: return "x";
+    case 1: return "u";
+    case 2: return "p";
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const char* double_this_name_out(casadi_int i){
   switch (i) {
-    case 0: return "y";
+    case 0: return "F_aero";
+    case 1: return "F_prop";
     default: return 0;
   }
 }
@@ -90,38 +103,25 @@ CASADI_SYMBOL_EXPORT const char* double_this_name_out(casadi_int i){
 CASADI_SYMBOL_EXPORT const casadi_int* double_this_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
+    case 1: return casadi_s1;
+    case 2: return casadi_s2;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* double_this_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s0;
+    case 0: return casadi_s3;
+    case 1: return casadi_s3;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT int double_this_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
-  if (sz_arg) *sz_arg = 1;
-  if (sz_res) *sz_res = 1;
+  if (sz_arg) *sz_arg = 3;
+  if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 0;
-  return 0;
-}
-
-casadi_int main_double_this(casadi_int argc, char* argv[]) {
-  casadi_int *iw = 0;
-  casadi_real w[4];
-  const casadi_real* arg[1] = {w+0};
-  casadi_real* res[1] = {w+1};
-  casadi_int j;
-  casadi_real* a = w;
-  for (j=0; j<1; ++j) scanf("%lf", a++);
-  casadi_int flag = double_this(arg, res, iw, w+2, 0);
-  if (flag) return flag;
-  const casadi_real* r = w+1;
-  for (j=0; j<1; ++j) CASADI_PRINTF("%g ", *r++);
-  CASADI_PRINTF("\n");
   return 0;
 }
 
@@ -141,15 +141,6 @@ CASADI_SYMBOL_EXPORT casadi_functions* double_this_functions(void) {
   return &fun;
 }
 
-int main(int argc, char* argv[]) {
-  if (argc<2) {
-    /* name error */
-  } else if (strcmp(argv[1], "double_this")==0) {
-    return main_double_this(argc-2, argv+2);
-  }
-  fprintf(stderr, "First input should be a command string. Possible values: 'double_this'\n");
-  return 1;
-}
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
