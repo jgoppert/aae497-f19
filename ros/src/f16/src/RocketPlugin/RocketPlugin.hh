@@ -113,6 +113,8 @@ namespace gazebo
     /// \brief Motor Link
     private: physics::LinkPtr motor;
 
+    private: physics::LinkPtr body;
+
     /// \brief keep track of controller update sim-time.
     private: gazebo::common::Time lastUpdateTime;
 
