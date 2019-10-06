@@ -34,23 +34,6 @@
       </visual>
     </link>
 
-    <plugin name="body" filename="libLiftDragPlugin.so">
-      <a0>0.0</a0>
-      <cla>0.0</cla>
-      <cda>0.6417112299</cda>
-      <cma>0.0</cma>
-      <alpha_stall>0.3391428111</alpha_stall>
-      <cla_stall>-3.85</cla_stall>
-      <cda_stall>-0.9233984055</cda_stall>
-      <cma_stall>0</cma_stall>
-      <cp>0 0 1.5</cp>
-      <area>0.03</area>
-      <air_density>1.2041</air_density>
-      <forward>0 0 1</forward>
-      <upward>0 1 0</upward>
-      <link_name>body</link_name>
-    </plugin>
-
     <link name='nose_cone'>
       <inertial>
         <pose>0 0 2.9 0 0 0</pose>
@@ -128,24 +111,24 @@
       </axis>
     </joint>
 
-    <plugin name="fin1" filename="libLiftDragPlugin.so">
-      <a0>0.0</a0>
-      <cla>4.752798721</cla>
-      <cda>0.6417112299</cda>
-      <cma>0.0</cma>
-      <alpha_stall>0.3391428111</alpha_stall>
-      <cla_stall>-3.85</cla_stall>
-      <cda_stall>-0.9233984055</cda_stall>
-      <cma_stall>0</cma_stall>
-      <cp>0 0 0</cp>
-      <area>0.1</area>
-      <air_density>1.2041</air_density>
-      <forward>0 0 1</forward>
-      <upward>0 1 0</upward>
-      <link_name>body</link_name>
-      <control_joint_name>fin1</control_joint_name>
-      <control_joint_rad_to_cl>-4.0</control_joint_rad_to_cl>
-    </plugin>
+    <!--<plugin name="fin1" filename="libLiftDragPlugin.so">-->
+      <!--<a0>0.0</a0>-->
+      <!--<cla>4.752798721</cla>-->
+      <!--<cda>0.6417112299</cda>-->
+      <!--<cma>0.0</cma>-->
+      <!--<alpha_stall>0.3391428111</alpha_stall>-->
+      <!--<cla_stall>-3.85</cla_stall>-->
+      <!--<cda_stall>-0.9233984055</cda_stall>-->
+      <!--<cma_stall>0</cma_stall>-->
+      <!--<cp>0 0 0</cp>-->
+      <!--<area>0.1</area>-->
+      <!--<air_density>1.2041</air_density>-->
+      <!--<forward>0 0 1</forward>-->
+      <!--<upward>0 1 0</upward>-->
+      <!--<link_name>body</link_name>-->
+      <!--<control_joint_name>fin1</control_joint_name>-->
+      <!--<control_joint_rad_to_cl>-4.0</control_joint_rad_to_cl>-->
+    <!--</plugin>-->
 
     <link name='fin2'>
       <pose>0 0 0 0 0 1.57</pose>
@@ -194,25 +177,6 @@
       </axis>
     </joint>
 
-    <plugin name="fin2" filename="libLiftDragPlugin.so">
-      <a0>0.0</a0>
-      <cla>4.752798721</cla>
-      <cda>0.6417112299</cda>
-      <cma>0.0</cma>
-      <alpha_stall>0.3391428111</alpha_stall>
-      <cla_stall>-3.85</cla_stall>
-      <cda_stall>-0.9233984055</cda_stall>
-      <cma_stall>0</cma_stall>
-      <cp>0 0 0</cp>
-      <area>0.1</area>
-      <air_density>1.2041</air_density>
-      <forward>0 0 1</forward>
-      <upward>1 0 0</upward>
-      <link_name>body</link_name>
-      <control_joint_name>fin2</control_joint_name>
-      <control_joint_rad_to_cl>-4.0</control_joint_rad_to_cl>
-    </plugin>
-
     <link name='fin3'>
       <pose>0 0 0 0 0 3.14</pose>
       <inertial>
@@ -259,25 +223,6 @@
         </limit>
       </axis>
     </joint>
-
-    <plugin name="fin3" filename="libLiftDragPlugin.so">
-      <a0>0.0</a0>
-      <cla>4.752798721</cla>
-      <cda>0.6417112299</cda>
-      <cma>0.0</cma>
-      <alpha_stall>0.3391428111</alpha_stall>
-      <cla_stall>-3.85</cla_stall>
-      <cda_stall>-0.9233984055</cda_stall>
-      <cma_stall>0</cma_stall>
-      <cp>0 0 0</cp>
-      <area>0.1</area>
-      <air_density>1.2041</air_density>
-      <forward>0 0 1</forward>
-      <upward>0 1 0</upward>
-      <link_name>body</link_name>
-      <control_joint_name>fin3</control_joint_name>
-      <control_joint_rad_to_cl>-4.0</control_joint_rad_to_cl>
-    </plugin>
 
     <link name='fin4'>
       <pose>0 0 0 0 0 -1.57</pose>
@@ -326,29 +271,10 @@
       </axis>
     </joint>
 
-    <!--<plugin name="fin4" filename="libLiftDragPlugin.so">-->
-      <!--<a0>0.0</a0>-->
-      <!--<cla>4.752798721</cla>-->
-      <!--<cda>0.6417112299</cda>-->
-      <!--<cma>0.0</cma>-->
-      <!--<alpha_stall>0.3391428111</alpha_stall>-->
-      <!--<cla_stall>-3.85</cla_stall>-->
-      <!--<cda_stall>-0.9233984055</cda_stall>-->
-      <!--<cma_stall>0</cma_stall>-->
-      <!--<cp>0 0 0</cp>-->
-      <!--<area>0.1</area>-->
-      <!--<air_density>1.2041</air_density>-->
-      <!--<forward>0 0 1</forward>-->
-      <!--<upward>1 0 0</upward>-->
-      <!--<link_name>body</link_name>-->
-      <!--<control_joint_name>fin4</control_joint_name>-->
-      <!--<control_joint_rad_to_cl>-4.0</control_joint_rad_to_cl>-->
-    <!--</plugin>-->
-
     <link name='rocket_motor'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <mass>0.00001</mass>
+        <mass>1.0</mass>
       </inertial>
       <visual name='visual'>
         <cast_shadows>0</cast_shadows>
@@ -374,6 +300,7 @@
 
     <plugin name="rocket_plugin" filename="libRocketPlugin.so">
       <motor>rocket_motor</motor>
+      <body>body</body>
     </plugin>
 
     <plugin name="p3d" filename="libgazebo_ros_p3d.so">
@@ -381,38 +308,6 @@
       <topicName>rocket/ground_truth</topicName>
       <frameName>world</frameName>
       <updateRate>100</updateRate>
-    </plugin>
-
-    <plugin name="fin1_torque" filename="libgazebo_ros_force.so">
-      <alwaysOn>true</alwaysOn>
-      <update>100</update>
-      <updateRate>100.0</updateRate>
-      <bodyName>fin1</bodyName>
-      <topicName>rocket/fin1_torque</topicName>
-    </plugin>
-
-    <plugin name="fin2_torque" filename="libgazebo_ros_force.so">
-      <alwaysOn>true</alwaysOn>
-      <update>100</update>
-      <updateRate>100.0</updateRate>
-      <bodyName>fin2</bodyName>
-      <topicName>rocket/fin2_torque</topicName>
-    </plugin>
-
-    <plugin name="fin3_torque" filename="libgazebo_ros_force.so">
-      <alwaysOn>true</alwaysOn>
-      <update>100</update>
-      <updateRate>100.0</updateRate>
-      <bodyName>fin3</bodyName>
-      <topicName>rocket/fin3_torque</topicName>
-    </plugin>
-
-    <plugin name="fin4_torque" filename="libgazebo_ros_force.so">
-      <alwaysOn>true</alwaysOn>
-      <update>100</update>
-      <updateRate>100.0</updateRate>
-      <bodyName>fin4</bodyName>
-      <topicName>rocket/fin4_torque</topicName>
     </plugin>
 
   </model>

@@ -32,15 +32,9 @@ GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 
 ////////////////////////////////////////////////////////////////////////////////
 RocketPlugin::RocketPlugin():
-	_double_this(double_this_functions())
+    _double_this(double_this_functions())
 {
-	std::cout << "hello rocket plugin" << std::endl;
-	double input = 1;
-	double res = 0;
-	_double_this.arg(0, &input);
-	_double_this.res(0, &res);
-	_double_this.eval();
-	std::cout << "input" << input << "result" << res << std::endl;
+    std::cout << "hello rocket plugin" << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -105,6 +99,11 @@ void RocketPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     GZ_ASSERT(false, "RocketPlugin failed to find motor");
   }
 
+  // Find body link to apply
+  if (!this->FindLink("body", _sdf, this->body)) {
+    GZ_ASSERT(false, "RocketPlugin failed to find body");
+  }
+
   // Update time.
   this->lastUpdateTime = this->model->GetWorld()->SimTime();
 
@@ -130,21 +129,40 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     auto inertial = this->motor->GetInertial();
     float m = inertial->Mass();
     float m_dot = 0.1;
-    float m_empty = 0.0;
+    float m_empty = 0.1;
     m = m - m_dot*dt;
-	float P0 = 101325.0; // freestream pressure
-	float Pe = 1.0*P0; // disable effect for now
+    float P0 = 101325.0; // freestream pressure
+    float Pe = 1.0*P0; // disable effect for now
     if (m < m_empty) {
       m = m_empty;
       m_dot = 0;
-	  Pe = P0;
+      Pe = P0;
     }
-	float r = 0.1; // nozzle radius
-	float A = M_PI*r*r; // nozzle exit area
+
+    float r = 0.1; // nozzle radius
+    float A = M_PI*r*r; // nozzle exit area
     float ve = 320; // exit velocity, m/s, guess
     this->motor->AddRelativeForce(ignition::math::Vector3d(0, 0, m_dot*ve + A*(Pe - P0)));
     inertial->SetMass(m);
-    inertial->SetInertiaMatrix(0, 0, 0, 0, 0, 0); // treat as point mass
+    inertial->SetInertiaMatrix(0.01, 0.01, 0.01, 0, 0, 0); // treat as point mass
     this->lastUpdateTime = curTime;
+
+    std::cout << "hello rocket plugin" << std::endl;
+    double states[14] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    double inputs[4] = {1, 2, 3, 4};
+    double parameters[15] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    double F_aero[3] = {0, 0, 0};
+    double F_prop[3] = {0, 0, 0};
+
+    ignition::math::Vector3d vel = this->body->WorldLinearVel();
+    _double_this.arg(0, states);
+    _double_this.arg(1, inputs);
+    _double_this.arg(2, parameters);
+    _double_this.res(0, F_aero);
+    _double_this.res(1, F_prop);
+    _double_this.eval();
+    std::cout << "F_aero" << F_aero[0] << F_aero[1] << F_aero[2] << std::endl;
+    std::cout << "F_prop" << F_prop[0] << F_prop[1] << F_prop[2] << std::endl;
+    std::cout << "velocity" << vel << std::endl;
   }
 }
