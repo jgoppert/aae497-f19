@@ -30,6 +30,8 @@
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/transport/TransportTypes.hh>
 #include "rocket.pb.h"
+#include "casadi/CasadiFunc.hpp"
+#include "casadi_gen.h"
 
 namespace gazebo
 {
@@ -99,59 +101,22 @@ namespace gazebo
     /// \param[in] _info Update information provided by the server.
     private: void Update(const common::UpdateInfo &_info);
 
-    /// \brief Callback executed when a new message containing control commands
-    /// is received.
-    /// \param[in] _msg New message containing control commands.
-    private: void OnControl(ConstRocketPtr &_msg);
-
-    /// \brief Update PID Joint controllers.
-    /// \param[in] _dt time step size since last update.
-    private: void UpdatePIDs(double _dt);
-
-    /// \brief Publish Rocket state.
-    private: void PublishState();
-
-    /// \brief Joint indexes.
-    private: static const unsigned int kFin1 = 0;
-    private: static const unsigned int kFin2 = 1;
-    private: static const unsigned int kFin3 = 2;
-    private: static const unsigned int kFin4 = 3;
-
     /// \brief Pointer to the update event connection.
     private: event::ConnectionPtr updateConnection;
 
     /// \brief Node used for using Gazebo communications.
     private: transport::NodePtr node;
 
-    /// \brief Subscriber pointer.
-    private: transport::SubscriberPtr controlSub;
-
-    /// \brief Publisher pointer.
-    private: transport::PublisherPtr statePub;
-
     /// \brief Pointer to the model;
     private: physics::ModelPtr model;
 
-    /// \brief Control surfaces joints.
-    private: std::array<physics::JointPtr, 4> joints;
+    /// \brief Motor Link
+    private: physics::LinkPtr motor;
 
-    /// \brief Body Link
     private: physics::LinkPtr body;
 
-    /// \brief Max propeller RPM.
-    private: int32_t propellerMaxRpm = 2500;
-
-    /// \brief Next command to be applied to the propeller and control surfaces.
-    private: std::array<float, 4> cmds;
-
-    /// \brief Velocity PID for the propeller.
-    private: common::PID propellerPID;
-
-    /// \brief Position PID for the control surfaces.
-    private: std::array<common::PID, 4> controlSurfacesPID;
-
     /// \brief keep track of controller update sim-time.
-    private: gazebo::common::Time lastControllerUpdateTime;
+    private: gazebo::common::Time lastUpdateTime;
 
     /// \brief Controller update mutex.
     private: std::mutex mutex;
@@ -164,6 +129,9 @@ namespace gazebo
 
     /// \brief Ignition Publisher.
     private: ignition::transport::Node::Publisher statePubIgn;
+
+	/// \brief Our casadi function
+    private: CasadiFunc _double_this;
   };
 }
 #endif
