@@ -102,7 +102,7 @@ void RocketPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Disable gravity, we will handle this in plugin
   this->body->SetGravityMode(false);
-  this->body->GetInertial()->SetMass(1.0); //  set your total mass with fuel here
+  this->body->GetInertial()->SetMass(0.4); //  set your total mass with fuel here
 
 
   // Update time.
