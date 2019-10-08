@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <string>
+#include "math.h"
 #include <sdf/sdf.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
@@ -32,7 +33,7 @@ GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 
 ////////////////////////////////////////////////////////////////////////////////
 RocketPlugin::RocketPlugin():
-    _double_this(double_this_functions())
+    rocket_force_moment(rocket_force_moment_functions())
 {
     std::cout << "hello rocket plugin" << std::endl;
 }
@@ -94,15 +95,15 @@ void RocketPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   GZ_ASSERT(_sdf, "RocketPlugin _sdf pointer is NULL");
   this->model = _model;
 
-  // Find motor link to apply propulsion forces
-  if (!this->FindLink("motor", _sdf, this->motor)) {
-    GZ_ASSERT(false, "RocketPlugin failed to find motor");
-  }
-
   // Find body link to apply
   if (!this->FindLink("body", _sdf, this->body)) {
     GZ_ASSERT(false, "RocketPlugin failed to find body");
   }
+
+  // Disable gravity, we will handle this in plugin
+  this->body->SetGravityMode(false);
+  this->body->GetInertial()->SetMass(1.0); //  set your total mass with fuel here
+
 
   // Update time.
   this->lastUpdateTime = this->model->GetWorld()->SimTime();
@@ -125,44 +126,87 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
   if (curTime > this->lastUpdateTime)
   {
     double dt = (curTime - this->lastUpdateTime).Double();
+    auto inertial = this->body->GetInertial();
 
-    auto inertial = this->motor->GetInertial();
-    float m = inertial->Mass();
-    float m_dot = 0.1;
-    float m_empty = 0.1;
-    m = m - m_dot*dt;
-    float P0 = 101325.0; // freestream pressure
-    float Pe = 1.0*P0; // disable effect for now
+    // state
+    double m = inertial->Mass();
+
+    // parameters
+    double m_dot = 0.1;
+    const double g = 9.8;
+    const double Jx = 1;
+    const double Jy = 1;
+    const double Jz = 1;
+    const double Jxz = 0.1;
+    const double ve = 350;
+    const double l_fin = 1.0;
+    const double CL_alpha = 2*M_PI;
+    const double CL0 = 0;
+    const double CD0 = 0.01;
+    const double K = 0.01;
+    const double s = 0.05;
+    const double rho = 1.225;
+    const double m_empty = 0.2;
+    const double l_motor = 1.0;
+
+    // integration for rocket mass flow
+    m -= m_dot*dt;
     if (m < m_empty) {
       m = m_empty;
       m_dot = 0;
-      Pe = P0;
     }
-
-    float r = 0.1; // nozzle radius
-    float A = M_PI*r*r; // nozzle exit area
-    float ve = 320; // exit velocity, m/s, guess
-    this->motor->AddRelativeForce(ignition::math::Vector3d(0, 0, m_dot*ve + A*(Pe - P0)));
+    float m_fuel = m - m_empty;
     inertial->SetMass(m);
-    inertial->SetInertiaMatrix(0.01, 0.01, 0.01, 0, 0, 0); // treat as point mass
+    inertial->SetInertiaMatrix(Jx + m_fuel*l_motor*l_motor, Jy + m_fuel*l_motor*l_motor, Jz, 0, 0, 0);
     this->lastUpdateTime = curTime;
 
-    std::cout << "hello rocket plugin" << std::endl;
-    double states[14] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    double inputs[4] = {1, 2, 3, 4};
-    double parameters[15] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    double F_aero[3] = {0, 0, 0};
-    double F_prop[3] = {0, 0, 0};
+    auto vel_ENU = this->body->RelativeLinearVel();
+    auto omega_ENU = this->body->RelativeAngularVel();
+    auto pose = this->body->WorldPose();
+    auto q_ENU_FLT = pose.Rot();
+    auto pos_ENU = pose.Pos();
 
-    ignition::math::Vector3d vel = this->body->WorldLinearVel();
-    _double_this.arg(0, states);
-    _double_this.arg(1, inputs);
-    _double_this.arg(2, parameters);
-    _double_this.res(0, F_aero);
-    _double_this.res(1, F_prop);
-    _double_this.eval();
-    std::cout << "F_aero" << F_aero[0] << F_aero[1] << F_aero[2] << std::endl;
-    std::cout << "F_prop" << F_prop[0] << F_prop[1] << F_prop[2] << std::endl;
-    std::cout << "velocity" << vel << std::endl;
+    double x[14] = {
+      omega_ENU.X(), omega_ENU.Y(), omega_ENU.Z(),
+      q_ENU_FLT.W(), q_ENU_FLT.X(), q_ENU_FLT.Y(), q_ENU_FLT.Z(),
+      vel_ENU.X(), vel_ENU.Y(), vel_ENU.Z(),
+      pos_ENU.X(), pos_ENU.Y(), pos_ENU.Z(),
+      m_fuel};
+
+    double u[4] = {m_dot, 0, 0, 0};
+    double p[15] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
+    double F_FLT[3] = {0, 0, 0};
+    double M_FLT[3] = {0, 0, 0};
+
+    rocket_force_moment.arg(0, x);
+    rocket_force_moment.arg(1, u);
+    rocket_force_moment.arg(2, p);
+    rocket_force_moment.res(0, F_FLT);
+    rocket_force_moment.res(1, M_FLT);
+    rocket_force_moment.eval();
+
+    // debug
+    for (int i=0; i<14; i++) {
+      gzdbg << "x[" << i << "]: " << x[i] << "\n";
+    }
+    for (int i=0; i<4; i++) {
+      gzdbg << "u[" << i << "]: " << u[i] << "\n";
+    }
+    for (int i=0; i<15; i++) {
+      gzdbg << "p[" << i << "]: " << p[i] << "\n";
+    }
+    gzdbg << std::endl;
+    gzdbg << "mass: " << m << std::endl;
+    gzdbg << "force: " << F_FLT[0] << " " << F_FLT[1] << " " << F_FLT[2] << std::endl;
+    gzdbg << "moment: " << M_FLT[0] << " " << M_FLT[1] << " " << M_FLT[2] << std::endl;
+
+    // chceck that forces/moments finite before we apply them
+    for (int i=0; i<3; i++) {
+      GZ_ASSERT(isfinite(F_FLT[i]), "non finite force");
+      GZ_ASSERT(isfinite(M_FLT[i]), "non finite moment");
+    }
+
+    this->body->AddRelativeForce(ignition::math::v4::Vector3d(F_FLT[0], F_FLT[1], F_FLT[2]));
+    this->body->AddRelativeTorque(ignition::math::v4::Vector3d(M_FLT[0], M_FLT[1], M_FLT[2]));
   }
 }
