@@ -21,13 +21,13 @@
     </include>
 
     <include>
-      <pose>0 0 1 0 0 0</pose>
+      <pose>0 0 1 0 -1.4 0</pose>
       <uri>model://rocket</uri>
     </include>
 
     <include>
       <uri>model://radio_tower</uri>
-      <pose>10 10 0 0 0 0</pose>
+      <pose>15 15 0 0 0 0</pose>
     </include>
 
     <model name="ground_plane">
@@ -97,7 +97,9 @@
         <projection_type>perspective</projection_type>
         <track_visual>
           <name>rocket</name>
-          <use_model_frame>1</use_model_frame>
+          <use_model_frame>true</use_model_frame>
+          <static>true</static>
+          <xyz>10 10 10</xyz>
           <min_dist>1</min_dist>
           <max_dist>100</max_dist>
         </track_visual>
