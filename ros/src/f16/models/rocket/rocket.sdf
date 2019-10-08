@@ -3,17 +3,19 @@
   <model name="rocket">
 
     <link name='body'>
-      <collision name='collision'>
-        <pose>-1.0 0 0 0 1.57 0</pose>
+      <inertial>
+        <pose>1.0 0 0 0 1.57 0</pose>
+      </inertial>
+      <collision name='body_collision'>
+        <pose>0 0 0 0 1.57 0</pose>
         <geometry>
           <mesh>
             <uri>model://rocket/meshes/stl/body.stl</uri>
           </mesh>
         </geometry>
       </collision>
-      <visual name='visual'>
-        <pose>-1.0 0 0 0 1.57 0</pose>
-        <cast_shadows>0</cast_shadows>
+      <visual name='body_visual'>
+        <pose>0 0 0 0 1.57 0</pose>
         <geometry>
           <mesh>
             <uri>model://rocket/meshes/stl/body.stl</uri>
@@ -25,7 +27,172 @@
           </script>
         </material>
       </visual>
+      <collision name='nose_collision'>
+        <pose>0 0 0 0 1.57 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/nose_cone.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='nose_visual'>
+        <pose>0 0 0 0 1.57 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/nose_cone.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/White</name>
+          </script>
+        </material>
+      </visual>
     </link>
+
+    <link name='fin1'>
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>1e-5</mass>
+        <inertia>
+          <ixx>0</ixx>
+          <iyy>0</iyy>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='collision'>
+=        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="fin1_joint" type="fixed">
+      <parent>body</parent>
+      <child>fin1</child>
+    </joint>
+
+    <link name='fin2'>
+      <pose>0 0 0 -1.57 0 0</pose>
+       <inertial>
+        <mass>1e-5</mass>
+        <inertia>
+          <ixx>0</ixx>
+          <iyy>0</iyy>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Green</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="fin2_joint" type="fixed">
+      <parent>body</parent>
+      <child>fin2</child>
+    </joint>
+
+    <link name='fin3'>
+      <pose>0 0 0 3.14 0 0</pose>
+      <inertial>
+        <mass>1e-5</mass>
+        <inertia>
+          <ixx>0</ixx>
+          <iyy>0</iyy>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Blue</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="fin3_joint" type="fixed">
+      <parent>body</parent>
+      <child>fin3</child>
+    </joint>
+
+    <link name='fin4'>
+      <pose>0 0 0 1.57 0 0</pose>
+      <inertial>
+        <mass>1e-5</mass>
+        <inertia>
+          <ixx>0</ixx>
+          <iyy>0</iyy>
+          <izz>0</izz>
+        </inertia>
+      </inertial>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>model://rocket/meshes/stl/fin.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/White</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="fin4_joint" type="fixed">
+      <parent>body</parent>
+      <child>fin4</child>
+    </joint>
 
     <plugin name="rocket_plugin" filename="libRocketPlugin.so">
       <body>body</body>
