@@ -174,7 +174,7 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
       pos_ENU.X(), pos_ENU.Y(), pos_ENU.Z(),
       m_fuel};
 
-    double u[4] = {m_dot, 0.01, 0.0, 0.0};
+    double u[4] = {m_dot, 1.0, 1.0, 1.0};
     double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
     double F_FLT[3] = {0, 0, 0};
     double M_FLT[3] = {0, 0, 0};

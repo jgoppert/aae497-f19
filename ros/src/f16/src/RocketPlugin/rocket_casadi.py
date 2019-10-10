@@ -149,7 +149,7 @@ def rocket_equations(jit=True):
     # x: omega_b, r_nb, v_b, p_n, m_fuel
     x0 = ca.vertcat(omega0_b, r0_nb, v0_b, p0_n, m0_fuel)
     #     g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
-    p0 = [9.8, 0.05, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
+    p0 = [9.8, 1.0, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
     initialize = ca.Function('initialize', [pitch_deg], [x0, p0])
 
     return {
@@ -310,8 +310,8 @@ def run():
     u0 = [0.1, 0.01, 0.0, 0.0]
     data = simulate(rocket, x0, u0, p0, tf=10)
     analyze_data(data)
-    plt.show()
     plt.savefig('rocket.png')
+    plt.show()
 
     code_generation()
 
