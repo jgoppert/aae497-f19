@@ -12,7 +12,7 @@ from pyecca.util import rk4
 def rocket_equations(jit=True):
     x = ca.SX.sym('x', 14)
     u = ca.SX.sym('u', 4)
-    p = ca.SX.sym('p', 15)
+    p = ca.SX.sym('p', 16)
 
     # State: x
     omega_b = x[0:3]  # inertial angular velocity expressed in body frame
@@ -35,14 +35,15 @@ def rocket_equations(jit=True):
     Jxz = p[4]
     ve = p[5]
     l_fin = p[6]
-    CL_alpha = p[7]
-    CL0 = p[8]
-    CD0 = p[9]
-    K = p[10]
-    s_fin = p[11]
-    rho = p[12]
-    m_empty = p[13]
-    l_motor = p[14]
+    w_fin = p[7]
+    CL_alpha = p[8]
+    CL0 = p[9]
+    CD0 = p[10]
+    K = p[11]
+    s_fin = p[12]
+    rho = p[13]
+    m_empty = p[14]
+    l_motor = p[15]
     
     # Calculations
     m = m_empty + m_fuel
@@ -86,14 +87,16 @@ def rocket_equations(jit=True):
     # build fin lift/drag forces
     vel_tol = 1e-3
     FA_b = ca.vertcat(0, 0, 0)
+    MA_b = ca.vertcat(0, 0, 0)
     for key, data in fins.items():
         fwd = data['fwd']
         up = data['up']
         mix = data['mix']
         U = ca.dot(fwd, v_b)
         W = ca.dot(up, v_b)
+        side = ca.cross(fwd, up)
         alpha = ca.if_else(ca.fabs(U) > vel_tol, -ca.atan(W/U), 0)
-        perp_wind_dir = ca.cross(ca.cross(fwd, up), rel_wind_dir)
+        perp_wind_dir = ca.cross(side, rel_wind_dir)
         norm_perp = ca.norm_2(perp_wind_dir)
         perp_wind_dir = ca.if_else(ca.fabs(norm_perp) > vel_tol, 
             perp_wind_dir/norm_perp, up)
@@ -103,17 +106,19 @@ def rocket_equations(jit=True):
         CD = CD0 + K*(CL - CL0)**2
         L = CL*q*s_fin
         D = CD*q*s_fin
-        FA_b += L*perp_wind_dir - D*rel_wind_dir
+        FAi_b = L*perp_wind_dir - D*rel_wind_dir
+        FA_b += FAi_b
+        MA_b += ca.cross(-l_fin*fwd + w_fin*side, FAi_b)
 
     FA_b = ca.if_else(ca.fabs(VT) > vel_tol, FA_b, ca.SX.zeros(3))
+    MA_b = ca.if_else(ca.fabs(VT) > vel_tol, MA_b, ca.SX.zeros(3))
 
     # propulsion
     FP_b = ca.vertcat(m_dot*ve, 0, 0)
     
     # force and momental total
     F_b = FA_b + FP_b + ca.mtimes(C_nb.T, m*g_n)
-    M_b = ca.cross(ca.vertcat(-l_fin, 0, 0), FA_b)
-    
+    M_b = MA_b
 
     force_moment = ca.Function(
         'force_moment', [x, u, p], [F_b, M_b], ['x', 'u', 'p'], ['F_b', 'M_b'])
@@ -140,11 +145,11 @@ def rocket_equations(jit=True):
     r0_nb = so3.Mrp.from_euler(ca.vertcat(0, pitch_deg*ca.pi/180, 0))
     v0_b = ca.vertcat(0, 0, 0)
     p0_n = ca.vertcat(0, 0, 0)
-    m0_fuel = 0.8
+    m0_fuel = 0.2
     # x: omega_b, r_nb, v_b, p_n, m_fuel
     x0 = ca.vertcat(omega0_b, r0_nb, v0_b, p0_n, m0_fuel)
-    #     g, Jx, Jy, Jz, Jxz, ve, l_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
-    p0 = [9.8, 1, 1, 1, 0.1, 350, 1.0, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
+    #     g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
+    p0 = [9.8, 0.05, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
     initialize = ca.Function('initialize', [pitch_deg], [x0, p0])
 
     return {
@@ -280,7 +285,7 @@ def gazebo_equations():
 
 def code_generation():
     x_gz = ca.SX.sym('x_gz', 14)
-    p = ca.SX.sym('p', 15)
+    p = ca.SX.sym('p', 16)
     u = ca.SX.sym('u', 4)
     gz_eqs = gazebo_equations()
     x = gz_eqs['state_from_gz'](x_gz)
@@ -302,9 +307,10 @@ def run():
     rocket = rocket_equations()
     x0, p0 = rocket['initialize'](70)
     # m_dot, aileron, elevator, rudder
-    u0 = [0.1, 0, 0, 0]
-    data = simulate(rocket, x0, u0, p0, tf=30)
+    u0 = [0.1, 0.01, 0.0, 0.0]
+    data = simulate(rocket, x0, u0, p0, tf=10)
     analyze_data(data)
+    plt.show()
     plt.savefig('rocket.png')
 
     code_generation()

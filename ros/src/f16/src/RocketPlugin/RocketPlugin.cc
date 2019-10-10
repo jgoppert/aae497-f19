@@ -134,12 +134,13 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     // parameters
     double m_dot = 0.1;
     const double g = 9.8;
-    const double Jx = 1;
+    const double Jx = 0.05;
     const double Jy = 1;
     const double Jz = 1;
-    const double Jxz = 0.1;
+    const double Jxz = 0;
     const double ve = 350;
     const double l_fin = 1.0;
+    const double w_fin = 0.05;
     const double CL_alpha = 2*M_PI;
     const double CL0 = 0;
     const double CD0 = 0.01;
@@ -173,8 +174,8 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
       pos_ENU.X(), pos_ENU.Y(), pos_ENU.Z(),
       m_fuel};
 
-    double u[4] = {m_dot, 0, 0, 0};
-    double p[15] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
+    double u[4] = {m_dot, 0.01, 0.0, 0.0};
+    double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
     double F_FLT[3] = {0, 0, 0};
     double M_FLT[3] = {0, 0, 0};
 
