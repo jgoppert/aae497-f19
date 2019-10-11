@@ -13,6 +13,8 @@ def rocket_equations(jit=True):
     x = ca.SX.sym('x', 14)
     u = ca.SX.sym('u', 4)
     p = ca.SX.sym('p', 16)
+    t = ca.SX.sym('t')
+    dt = ca.SX.sym('dt')
 
     # State: x
     omega_b = x[0:3]  # inertial angular velocity expressed in body frame
@@ -139,6 +141,11 @@ def rocket_equations(jit=True):
     x1[3:7] = so3.Mrp.shadow_if_necessary(x1[3:7])
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
+    # control
+    u_control = ca.vertcat(0.1, 0.1*ca.sin(2*ca.pi*0.5*t), 0, 0)
+    control = ca.Function('control', [x, p, t, dt], [u_control],
+        ['x', 'p', 't', 'dt'], ['u'])
+
     # initialize
     pitch_deg = ca.SX.sym('pitch_deg')
     omega0_b = ca.vertcat(0, 0, 0)
@@ -155,6 +162,7 @@ def rocket_equations(jit=True):
     return {
         'rhs': rhs,
         'predict': predict,
+        'control': control,
         'initialize': initialize,
         'force_moment': force_moment,
         'x': x,
@@ -221,20 +229,34 @@ def analyze_data(data):
     plt.axis('equal')
     plt.grid()
 
+    plt.figure(figsize=(10, 17))
+    plt.title('control input')
+    plt.plot(data['t'], data['u'][:, 0], label='mdot')
+    plt.plot(data['t'], data['u'][:, 1], label='aileron')
+    plt.plot(data['t'], data['u'][:, 2], label='elevator')
+    plt.plot(data['t'], data['u'][:, 3], label='rudder')
+    plt.xlabel('t, sec')
+    plt.ylabel('u')
+    plt.grid()
+
 
 def simulate(rocket, x0, u0, p0, dt=0.01, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
     """
     x = x0
+    u = u0
     data = {
         't': [],
-        'x': []
+        'x': [],
+        'u': []
     }
     for t in np.arange(t0, tf, dt):
         data['x'].append(np.array(x).reshape(-1))
         data['t'].append(t)
-        x = rocket['predict'](x, u0, p0, t, dt)
+        data['u'].append(np.array(u).reshape(-1))
+        u = rocket['control'](x, p0, t, dt)
+        x = rocket['predict'](x, u, p0, t, dt)
    
     for k in data.keys():
         data[k] = np.array(data[k])
