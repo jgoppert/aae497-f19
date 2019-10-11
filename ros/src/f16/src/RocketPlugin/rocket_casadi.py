@@ -240,6 +240,73 @@ def analyze_data(data):
     plt.grid()
 
 
+def constrain(s, v_b, phi, theta, omega_b, m_fuel):
+    
+    # s is our design vector:
+    # s = [mdot, aileron, elevator, rudder]
+    m_dot = s[0]
+    ail = s[1]
+    elev = s[2]
+    rdr = s[3]
+
+    psi = 0  # don't care, doesn't effect dynamics
+    r_nb = pyecca.Mrp.from_euler(ca.vertcat(phi, theta, psi))
+
+    p_n = ca.vertcat(0, 0, 0)
+
+    # vt, alpha, theta, q, h, pos
+    x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
+    
+    # mdot, aileron, elevator, rudder
+    u = ca.vertcat(m_dot, ail, elev, rdr)
+    return x, u
+
+def constraint(s, v_b, phi, theta, omega_b, m_fuel, rhs):
+    x, u = constrain(s, v_b, phi, theta, omega_b, m_fuel)
+    x_dot = rhs(x, u)
+
+    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
+    # r_nb = x[3:7]  # modified rodrigues parameters
+    # v_b = x[7:10]  # inertial velocity expressed in body components
+    # p_n = x[10:13]  # positon in nav frame
+    # m_fuel = x[13]  # mass
+    
+    return ca.vertcat(
+        x_dot[0], x_dot[1], x_dot[2],
+        x_dot[7], x_dot[8], x_dot[9])  # force/moment balance, as close as we can get
+
+def objective(s, vt, h, q, gamma):
+    return 0  # ignore
+
+def trim(vt, h, q, gamma, s0=np.zeros(3)):
+    s = ca.SX.sym('s', 3)
+    nlp = {'x': s,
+           'f': objective(s, vt=vt, h=h, q=q, gamma=gamma),
+            'g': constraint(s, vt=vt, h=h, q=q, gamma=gamma)}
+    S = ca.nlpsol('S', 'ipopt', nlp, {
+        'print_time': 0,
+        'ipopt': {
+            'sb': 'yes',
+            'print_level': 0,
+            }
+        })
+    # s = [thtl, elev_deg, alpha, phi]
+    res = S(x0=s0, lbg=[0, 0, 0], ubg=[0, 0, 0],
+            lbx=[0, -20, -np.deg2rad(5)],
+            ubx=[10, 20, np.deg2rad(15)])
+    stats = S.stats()
+    if not stats['success']:
+        raise ValueError('Trim failed to converge', stats['return_status'])
+    s_opt = res['x']
+    x0, u0 = constrain(s_opt, vt, h, q, gamma)
+    return {
+        'x0': np.array(x0).reshape(-1),
+        'u0': np.array(u0).reshape(-1),
+        's': np.array(s_opt).reshape(-1),
+        'g': np.array(res['g'])
+    }
+
+
 def simulate(rocket, x0, u0, p0, dt=0.01, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
