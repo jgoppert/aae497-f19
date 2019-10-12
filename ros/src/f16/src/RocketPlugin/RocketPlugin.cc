@@ -136,13 +136,13 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
   if (curTime > this->lastUpdateTime)
   {
     double dt = (curTime - this->lastUpdateTime).Double();
+    this->lastUpdateTime = curTime;
     auto inertial = this->body->GetInertial();
 
     // state
     double m = inertial->Mass();
 
     // parameters
-    double m_dot = 0.1;
     const double g = 9.8;
     const double Jx = 0.05;
     const double Jy = 1;
@@ -160,17 +160,6 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     const double m_empty = 0.2;
     const double l_motor = 1.0;
 
-    // integration for rocket mass flow
-    m -= m_dot*dt;
-    if (m < m_empty) {
-      m = m_empty;
-      m_dot = 0;
-    }
-    double m_fuel = m - m_empty;
-    inertial->SetMass(m);
-    inertial->SetInertiaMatrix(Jx + m_fuel*l_motor*l_motor, Jy + m_fuel*l_motor*l_motor, Jz, 0, 0, 0);
-    this->lastUpdateTime = curTime;
-
     auto vel_ENU = this->body->RelativeLinearVel();
     auto omega_ENU = this->body->RelativeAngularVel();
     auto pose = this->body->WorldPose();
@@ -178,6 +167,7 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     auto pos_ENU = pose.Pos();
 
     // native gazebo state
+    double m_fuel = m - m_empty;
     double x_gz[14] = {
       omega_ENU.X(), omega_ENU.Y(), omega_ENU.Z(),
       q_ENU_FLT.W(), q_ENU_FLT.X(), q_ENU_FLT.Y(), q_ENU_FLT.Z(),
@@ -219,6 +209,16 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     for (int i=0; i<4; i++) {
       this->fin[i]->SetPosition(0, fin[i]);
     }
+
+    // integration for rocket mass flow
+    double m_dot = u[0];
+    m -= m_dot*dt;
+    if (m < m_empty) {
+      m = m_empty;
+      m_dot = 0;
+    }
+    inertial->SetMass(m);
+    inertial->SetInertiaMatrix(Jx + m_fuel*l_motor*l_motor, Jy + m_fuel*l_motor*l_motor, Jz, 0, 0, 0);
 
     // debug
     for (int i=0; i<14; i++) {
