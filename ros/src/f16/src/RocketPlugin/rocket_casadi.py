@@ -142,7 +142,7 @@ def rocket_equations(jit=True):
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
     # control
-    u_control = ca.vertcat(0.1, 0.1*ca.sin(2*ca.pi*0.5*t), 0, 0)
+    u_control = ca.vertcat(0.1, 0.3*ca.sin(2*ca.pi*0.5*t), 0, 0)
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -237,6 +237,7 @@ def analyze_data(data):
     plt.plot(data['t'], data['u'][:, 3], label='rudder')
     plt.xlabel('t, sec')
     plt.ylabel('u')
+    plt.legend()
     plt.grid()
 
 
@@ -364,7 +365,7 @@ def gazebo_equations():
     vel_FRB = ca.mtimes(C_FLT_FRB.T, vel_FLT)
     
     x = ca.vertcat(omega_FRB, r_NED_FRB, vel_FRB, pos_NED, m_fuel)
-    state_from_gz = ca.Function('gazebo_state', [x_gz], [x], ['x_gz'], ['x'])
+    state_from_gz = ca.Function('state_from_gz', [x_gz], [x], ['x_gz'], ['x'])
     return {
         'state_from_gz': state_from_gz,
         'C_NED_ENU': C_NED_ENU,
@@ -373,22 +374,30 @@ def gazebo_equations():
 
 
 def code_generation():
+    x = ca.SX.sym('x', 14)
     x_gz = ca.SX.sym('x_gz', 14)
     p = ca.SX.sym('p', 16)
     u = ca.SX.sym('u', 4)
+    t = ca.SX.sym('t')
+    dt = ca.SX.sym('dt')
     gz_eqs = gazebo_equations()
-    x = gz_eqs['state_from_gz'](x_gz)
+    f_state = gz_eqs['state_from_gz']
     eqs = rocket_equations()
     C_FLT_FRB = gz_eqs['C_FLT_FRB']
     F_FRB, M_FRB = eqs['force_moment'](x, u, p)
     F_FLT = ca.mtimes(C_FLT_FRB, F_FRB)
     M_FLT = ca.mtimes(C_FLT_FRB, M_FRB)
     f_force_moment = ca.Function('rocket_force_moment',
-        [x_gz, u, p], [F_FLT, M_FLT], ['x_gz', 'u', 'p'], ['F_FLT', 'M_FLT'])
+        [x, u, p], [F_FLT, M_FLT], ['x', 'u', 'p'], ['F_FLT', 'M_FLT'])
+    u_control = eqs['control'](x, p, t, dt)
+    f_control = ca.Function('rocket_control', [x, p, t, dt], [u_control],
+        ['x', 'p', 't', 'dt'], ['u'])
     gen = ca.CodeGenerator(
         'casadi_gen.c',
         {'main': False, 'mex': False, 'with_header': True, 'with_mem': True})
+    gen.add(f_state)
     gen.add(f_force_moment)
+    gen.add(f_control)
     gen.generate()
     
 
