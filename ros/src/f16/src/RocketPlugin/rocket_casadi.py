@@ -147,10 +147,28 @@ def rocket_equations(jit=True):
     x1[3:7] = so3.Mrp.shadow_if_necessary(x1[3:7])
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
+    def schedule(t, start, ty_pairs):
+        val = start
+        for ti, yi in ty_pairs:
+            val = ca.if_else(t > ti, yi, val)
+        return val
+
     # control
     u_control = ca.SX.zeros(4)
-    u_control[0] = 0.1
-    u_control[2] = ca.if_else(t < 1, 0, ca.if_else(t < 5, -0.3, 0.2))
+    # these controls are just test controls to make sure the fins are working
+    u_control[0] = 0.1  # mass flow rate
+    u_control[1] = schedule(t, 0, [ # aileron
+        (15, 0.1), (20, -0.1), (25, 0) # roll maneuver
+        ])
+    u_control[2] = schedule(t, 0, [ # elevator
+        (1, -0.1), (1.1, -0.2), (1.2, -0.3), # initial fin deflection to go horizontal
+        (5, -0.2), (5.1, -0.1), (5.2, 0), (5.3, 0.1), (5.4, 0.2),  # transition to horizontal flight
+        (14, 0.1), (14.2, 0.0)  # prepare for roll
+        ])
+    u_control[3] = schedule(t, 0, [ # rudder
+        (6, 0.1), (6.1, 0.2), (6.3, 0.3), (6.4, 0.4), (6.5, 0.5), # turn
+        (6.6, 0.4), (6.7, 0.3), (6.8, 0.2), (6.9, 0.1), (7.0, 0.0)
+        ])
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -316,7 +334,7 @@ def trim(vt, h, q, gamma, s0=np.zeros(3)):
     }
 
 
-def simulate(rocket, x0, p0, dt=0.01, t0=0, tf=5):
+def simulate(rocket, x0, p0, dt=0.005, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
     """
