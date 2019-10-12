@@ -733,18 +733,25 @@ CASADI_SYMBOL_EXPORT casadi_functions* rocket_force_moment_functions(void) {
 }
 /* rocket_control:(x[14],p[16],t,dt)->(u[4]) */
 static int casadi_f2(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a2;
+  casadi_real a0, a1, a2, a3, a4;
   a0=1.0000000000000001e-01;
   if (res[0]!=0) res[0][0]=a0;
-  a0=2.9999999999999999e-01;
-  a1=3.1415926535897931e+00;
-  a2=arg[2] ? arg[2][0] : 0;
-  a1=(a1*a2);
-  a1=sin(a1);
-  a0=(a0*a1);
-  if (res[0]!=0) res[0][1]=a0;
   a0=0.;
-  if (res[0]!=0) res[0][2]=a0;
+  if (res[0]!=0) res[0][1]=a0;
+  a1=arg[2] ? arg[2][0] : 0;
+  a2=1.;
+  a2=(a1<a2);
+  a2=(!a2);
+  a3=5.;
+  a1=(a1<a3);
+  a3=2.9999999999999999e-01;
+  a3=(a1?a3:0);
+  a1=(!a1);
+  a4=-2.0000000000000001e-01;
+  a1=(a1?a4:0);
+  a3=(a3+a1);
+  a2=(a2?a3:0);
+  if (res[0]!=0) res[0][2]=a2;
   if (res[0]!=0) res[0][3]=a0;
   return 0;
 }

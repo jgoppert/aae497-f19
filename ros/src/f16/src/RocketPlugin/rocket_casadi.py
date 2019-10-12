@@ -142,7 +142,7 @@ def rocket_equations(jit=True):
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
     # control
-    u_control = ca.vertcat(0.1, 0.3*ca.sin(2*ca.pi*0.5*t), 0, 0)
+    u_control = ca.vertcat(0.1, 0, ca.if_else(t < 1, 0, ca.if_else(t < 5, 0.3, -0.2)), 0)
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -152,7 +152,7 @@ def rocket_equations(jit=True):
     r0_nb = so3.Mrp.from_euler(ca.vertcat(0, pitch_deg*ca.pi/180, 0))
     v0_b = ca.vertcat(0, 0, 0)
     p0_n = ca.vertcat(0, 0, 0)
-    m0_fuel = 0.2
+    m0_fuel = 0.8
     # x: omega_b, r_nb, v_b, p_n, m_fuel
     x0 = ca.vertcat(omega0_b, r0_nb, v0_b, p0_n, m0_fuel)
     #     g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
@@ -173,25 +173,25 @@ def rocket_equations(jit=True):
 
 
 def analyze_data(data):
-    plt.figure(figsize=(10, 17))
-    plt.subplot(321)
+    plt.figure(figsize=(20, 20))
+    plt.subplot(331)
     plt.title('fuel')
     plt.plot(data['t'], data['x'][:, 13])
     plt.xlabel('t, sec')
     plt.ylabel('mass, kg')
     plt.grid()
 
-    plt.subplot(322)
-    plt.title('velocity')
-    plt.plot(data['t'], data['x'][:, 7], label='v_X')
-    plt.plot(data['t'], data['x'][:, 8], label='v_Y')
-    plt.plot(data['t'], data['x'][:, 9], label='v_Z')
+    plt.subplot(332)
+    #plt.title('velocity')
+    plt.plot(data['t'], data['x'][:, 7], label='x')
+    plt.plot(data['t'], data['x'][:, 8], label='y')
+    plt.plot(data['t'], data['x'][:, 9], label='z')
     plt.xlabel('t, sec')
-    plt.ylabel('m/s')
+    plt.ylabel('body velocity, m/s')
     plt.grid()
     plt.legend()
     
-    plt.subplot(323)
+    plt.subplot(333)
     euler = np.array(
         [np.array(ca.DM(so3.Euler.from_mrp(x))).reshape(-1) for x in data['x'][:, 3:7]])
     plt.plot(data['t'], np.rad2deg(euler[:, 0]), label='roll')
@@ -200,43 +200,43 @@ def analyze_data(data):
     plt.legend()
     plt.grid()
     plt.xlabel('t, sec')
-    plt.ylabel('deg')
-    plt.title('euler')
+    plt.ylabel('euler angles, deg')
+    #plt.title('euler')
     
-    plt.subplot(324)
-    plt.title('angular velocity')
+    plt.subplot(334)
+    #plt.title('angular velocity')
     plt.plot(data['t'], data['x'][:, 0], label='x')
     plt.plot(data['t'], data['x'][:, 1], label='y')
     plt.plot(data['t'], data['x'][:, 2], label='z')
     plt.xlabel('t, sec')
-    plt.ylabel('rad/s')
+    plt.ylabel('angular velocity, rad/s')
     plt.grid()
     plt.legend()
     
-    plt.subplot(325)
-    plt.title('trajectory [side]')
+    plt.subplot(335)
+    #plt.title('trajectory [side]')
     plt.plot(data['x'][:, 10], -data['x'][:, 12])
     plt.xlabel('North, m')
     plt.ylabel('Altitude, m')
     plt.axis('equal')
     plt.grid()
     
-    plt.subplot(326)
-    plt.title('trajectory [top]')
+    plt.subplot(336)
+    #plt.title('trajectory [top]')
     plt.plot(data['x'][:, 11], data['x'][:, 10])
     plt.xlabel('East, m')
     plt.ylabel('North, m')
     plt.axis('equal')
     plt.grid()
 
-    plt.figure(figsize=(10, 17))
-    plt.title('control input')
+    plt.subplot(337)
+    #plt.title('control input')
     plt.plot(data['t'], data['u'][:, 0], label='mdot')
     plt.plot(data['t'], data['u'][:, 1], label='aileron')
     plt.plot(data['t'], data['u'][:, 2], label='elevator')
     plt.plot(data['t'], data['u'][:, 3], label='rudder')
     plt.xlabel('t, sec')
-    plt.ylabel('u')
+    plt.ylabel('control')
     plt.legend()
     plt.grid()
 
@@ -308,12 +308,12 @@ def trim(vt, h, q, gamma, s0=np.zeros(3)):
     }
 
 
-def simulate(rocket, x0, u0, p0, dt=0.01, t0=0, tf=5):
+def simulate(rocket, x0, p0, dt=0.01, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
     """
     x = x0
-    u = u0
+    u = rocket['control'](x0, p0, t0, dt)
     data = {
         't': [],
         'x': [],
@@ -405,8 +405,7 @@ def run():
     rocket = rocket_equations()
     x0, p0 = rocket['initialize'](70)
     # m_dot, aileron, elevator, rudder
-    u0 = [0.1, 0.01, 0.0, 0.0]
-    data = simulate(rocket, x0, u0, p0, tf=10)
+    data = simulate(rocket, x0, p0, tf=10)
     analyze_data(data)
     plt.savefig('rocket.png')
     plt.show()
