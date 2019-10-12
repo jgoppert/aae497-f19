@@ -32,8 +32,9 @@ GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 ////////////////////////////////////////////////////////////////////////////////
 RocketPlugin::RocketPlugin():
     state_from_gz(state_from_gz_functions()),
-    rocket_force_moment(rocket_force_moment_functions()),
-    rocket_control(rocket_control_functions())
+    rocket_u_to_fin(rocket_u_to_fin_functions()),
+    rocket_control(rocket_control_functions()),
+    rocket_force_moment(rocket_force_moment_functions())
 {
     std::cout << "hello rocket plugin" << std::endl;
 }
@@ -211,9 +212,12 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     rocket_force_moment.eval();
 
     // set joints
-    double mix[4] = {u[1] + u[3], u[1] + u[2], u[1] - u[3], u[1] - u[2]};
+    double fin[4];
+    rocket_u_to_fin.arg(0, u);
+    rocket_u_to_fin.res(0, fin);
+    rocket_u_to_fin.eval();
     for (int i=0; i<4; i++) {
-      this->fin[i]->SetPosition(0, mix[i]);
+      this->fin[i]->SetPosition(0, fin[i]);
     }
 
     // debug

@@ -9,6 +9,14 @@ import pyecca.lie.so3 as so3
 from pyecca.util import rk4
 
 
+def u_to_fin(u):
+    ail = u[1]
+    elv = u[2]
+    rdr = u[3]
+    # top, left, down right
+    return ca.vertcat(ail - rdr, ail - elv, ail + rdr, ail + elv)
+ 
+
 def rocket_equations(jit=True):
     x = ca.SX.sym('x', 14)
     u = ca.SX.sym('u', 4)
@@ -25,9 +33,7 @@ def rocket_equations(jit=True):
     
     # Input: u
     m_dot = ca.if_else(m_fuel > 0, u[0], 0)
-    aileron = u[1]
-    elevator = u[2]
-    rudder = u[3]
+    fin = u_to_fin(u)
     
     # Parameters: p
     g = p[0]  # gravity
@@ -66,22 +72,22 @@ def rocket_equations(jit=True):
         'top': {
             'fwd': [1, 0, 0],
             'up': [0, 1, 0],
-            'mix': aileron + rudder,
+            'angle': fin[0]
         },
         'left': {
             'fwd': [1, 0, 0],
             'up': [0, 0, -1],
-            'mix': aileron + elevator,
+            'angle': fin[1]
         },
         'down': {
             'fwd': [1, 0, 0],
             'up': [0, -1, 0],
-            'mix': aileron - rudder,
+            'angle': fin[2]
         },
         'right': {
             'fwd': [1, 0, 0],
             'up': [0, 0, 1],
-            'mix': aileron - elevator,
+            'angle': fin[3]
         },
     }
     rel_wind_dir = v_b/VT
@@ -93,7 +99,7 @@ def rocket_equations(jit=True):
     for key, data in fins.items():
         fwd = data['fwd']
         up = data['up']
-        mix = data['mix']
+        angle = data['angle']
         U = ca.dot(fwd, v_b)
         W = ca.dot(up, v_b)
         side = ca.cross(fwd, up)
@@ -102,7 +108,7 @@ def rocket_equations(jit=True):
         norm_perp = ca.norm_2(perp_wind_dir)
         perp_wind_dir = ca.if_else(ca.fabs(norm_perp) > vel_tol, 
             perp_wind_dir/norm_perp, up)
-        CL = CL0 + CL_alpha*(alpha + mix)
+        CL = CL0 + CL_alpha*(alpha + angle)
         # model stall
         CL = ca.if_else(ca.fabs(alpha) < 0.4, CL, 0)
         CD = CD0 + K*(CL - CL0)**2
@@ -110,7 +116,7 @@ def rocket_equations(jit=True):
         D = CD*q*s_fin
         FAi_b = L*perp_wind_dir - D*rel_wind_dir
         FA_b += FAi_b
-        MA_b += ca.cross(-l_fin*fwd + w_fin*side, FAi_b)
+        MA_b += ca.cross(-l_fin*fwd - w_fin*side, FAi_b)
 
     FA_b = ca.if_else(ca.fabs(VT) > vel_tol, FA_b, ca.SX.zeros(3))
     MA_b = ca.if_else(ca.fabs(VT) > vel_tol, MA_b, ca.SX.zeros(3))
@@ -142,7 +148,9 @@ def rocket_equations(jit=True):
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
     # control
-    u_control = ca.vertcat(0.1, 0, ca.if_else(t < 1, 0, ca.if_else(t < 5, 0.3, -0.2)), 0)
+    u_control = ca.SX.zeros(4)
+    u_control[0] = 0.1
+    u_control[2] = ca.if_else(t < 1, 0, ca.if_else(t < 5, -0.3, 0.2))
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -387,6 +395,7 @@ def code_generation():
     F_FRB, M_FRB = eqs['force_moment'](x, u, p)
     F_FLT = ca.mtimes(C_FLT_FRB, F_FRB)
     M_FLT = ca.mtimes(C_FLT_FRB, M_FRB)
+    f_u_to_fin = ca.Function('rocket_u_to_fin', [u], [u_to_fin(u)], ['u'], ['fin'])
     f_force_moment = ca.Function('rocket_force_moment',
         [x, u, p], [F_FLT, M_FLT], ['x', 'u', 'p'], ['F_FLT', 'M_FLT'])
     u_control = eqs['control'](x, p, t, dt)
@@ -398,6 +407,7 @@ def code_generation():
     gen.add(f_state)
     gen.add(f_force_moment)
     gen.add(f_control)
+    gen.add(f_u_to_fin)
     gen.generate()
     
 

@@ -79,7 +79,7 @@
       <parent>body</parent>
       <child>fin0</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
       </axis>
     </joint>
 
@@ -112,7 +112,7 @@
       <parent>body</parent>
       <child>fin1</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
       </axis>
     </joint>
 
@@ -145,7 +145,7 @@
       <parent>body</parent>
       <child>fin2</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
       </axis>
     </joint>
 
@@ -178,7 +178,7 @@
       <parent>body</parent>
       <child>fin3</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
       </axis>
     </joint>
 
