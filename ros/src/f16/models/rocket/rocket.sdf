@@ -60,13 +60,6 @@
           <izz>1e-5</izz>
         </inertia>
       </inertial>
-      <collision name='collision'>
-=        <geometry>
-          <mesh>
-            <uri>model://rocket/meshes/stl/fin.stl</uri>
-          </mesh>
-        </geometry>
-      </collision>
       <visual name='visual'>
         <geometry>
           <mesh>
@@ -100,13 +93,6 @@
           <izz>1e-5</izz>
         </inertia>
       </inertial>
-      <collision name='collision'>
-        <geometry>
-          <mesh>
-            <uri>model://rocket/meshes/stl/fin.stl</uri>
-          </mesh>
-        </geometry>
-      </collision>
       <visual name='visual'>
         <geometry>
           <mesh>
@@ -140,13 +126,6 @@
           <izz>1e-5</izz>
         </inertia>
       </inertial>
-      <collision name='collision'>
-        <geometry>
-          <mesh>
-            <uri>model://rocket/meshes/stl/fin.stl</uri>
-          </mesh>
-        </geometry>
-      </collision>
       <visual name='visual'>
         <geometry>
           <mesh>
@@ -180,13 +159,6 @@
           <izz>1e-5</izz>
         </inertia>
       </inertial>
-      <collision name='collision'>
-        <geometry>
-          <mesh>
-            <uri>model://rocket/meshes/stl/fin.stl</uri>
-          </mesh>
-        </geometry>
-      </collision>
       <visual name='visual'>
         <geometry>
           <mesh>
