@@ -22,13 +22,9 @@
 #include <mutex>
 #include <string>
 #include <sdf/sdf.hh>
-#include <ignition/transport/Node.hh>
-#include <gazebo/common/PID.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/TransportTypes.hh>
 #include "casadi/CasadiFunc.hpp"
 #include "casadi_gen.h"
 
@@ -73,9 +69,6 @@ namespace gazebo
     /// \brief Pointer to the update event connection.
     private: event::ConnectionPtr updateConnection;
 
-    /// \brief Node used for using Gazebo communications.
-    private: transport::NodePtr node;
-
     /// \brief Pointer to the model;
     private: physics::ModelPtr model;
 
@@ -85,19 +78,14 @@ namespace gazebo
     /// \brief Controller update mutex.
     private: std::mutex mutex;
 
-    // Place ignition::transport objects at the end of this file to
-    // guarantee they are destructed first.
-
-    /// \brief Ignition node used for using Gazebo communications.
-    private: ignition::transport::Node nodeIgn;
-
-    /// \brief Ignition Publisher.
-    private: ignition::transport::Node::Publisher statePubIgn;
-
     /// \brief Motor Link
     private: physics::LinkPtr body;
+	  private: physics::JointPtr fin[4];
 
-	/// \brief Our casadi function
+	/// \brief Our casadi functions
+    private: CasadiFunc state_from_gz;
+    private: CasadiFunc rocket_u_to_fin;
+    private: CasadiFunc rocket_control;
     private: CasadiFunc rocket_force_moment;
   };
 }
