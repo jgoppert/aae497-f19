@@ -135,12 +135,9 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
 
   if (curTime > this->lastUpdateTime)
   {
+    // elapsed time
     double dt = (curTime - this->lastUpdateTime).Double();
     this->lastUpdateTime = curTime;
-    auto inertial = this->body->GetInertial();
-
-    // state
-    double m = inertial->Mass();
 
     // parameters
     const double g = 9.8;
@@ -159,33 +156,34 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     const double rho = 1.225;
     const double m_empty = 0.2;
     const double l_motor = 1.0;
+    double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
 
+    // state
+    auto inertial = this->body->GetInertial();
+    double m = inertial->Mass();
     auto vel_ENU = this->body->RelativeLinearVel();
     auto omega_ENU = this->body->RelativeAngularVel();
     auto pose = this->body->WorldPose();
     auto q_ENU_FLT = pose.Rot();
     auto pos_ENU = pose.Pos();
+    double m_fuel = m - m_empty;
 
     // native gazebo state
-    double m_fuel = m - m_empty;
     double x_gz[14] = {
       omega_ENU.X(), omega_ENU.Y(), omega_ENU.Z(),
       q_ENU_FLT.W(), q_ENU_FLT.X(), q_ENU_FLT.Y(), q_ENU_FLT.Z(),
       vel_ENU.X(), vel_ENU.Y(), vel_ENU.Z(),
       pos_ENU.X(), pos_ENU.Y(), pos_ENU.Z(),
       m_fuel};
-    double x[14]; // transformed state for EOMs/ control
-    double u[4];
-    double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
-    double F_FLT[3] = {0, 0, 0};
-    double M_FLT[3] = {0, 0, 0};
 
     // state from gazebo state
+    double x[14];
     state_from_gz.arg(0, x_gz);
     state_from_gz.res(0, x);
     state_from_gz.eval();
 
     // control
+    double u[4];
     rocket_control.arg(0, x);
     rocket_control.arg(1, p);
     rocket_control.arg(2, &t);
@@ -194,6 +192,8 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     rocket_control.eval();
 
     // force moment
+    double F_FLT[3];
+    double M_FLT[3];
     rocket_force_moment.arg(0, x);
     rocket_force_moment.arg(1, u);
     rocket_force_moment.arg(2, p);
@@ -235,12 +235,12 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     gzdbg << "force: " << F_FLT[0] << " " << F_FLT[1] << " " << F_FLT[2] << std::endl;
     gzdbg << "moment: " << M_FLT[0] << " " << M_FLT[1] << " " << M_FLT[2] << std::endl;
 
-    // chceck that forces/moments finite before we apply them
+    // apply forces and moments
     for (int i=0; i<3; i++) {
+      // check that forces/moments finite before we apply them
       GZ_ASSERT(isfinite(F_FLT[i]), "non finite force");
       GZ_ASSERT(isfinite(M_FLT[i]), "non finite moment");
     }
-
     this->body->AddRelativeForce(ignition::math::v4::Vector3d(F_FLT[0], F_FLT[1], F_FLT[2]));
     this->body->AddRelativeTorque(ignition::math::v4::Vector3d(M_FLT[0], M_FLT[1], M_FLT[2]));
   }
