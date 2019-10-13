@@ -266,73 +266,6 @@ def analyze_data(data):
     plt.grid()
 
 
-def constrain(s, v_b, phi, theta, omega_b, m_fuel):
-    
-    # s is our design vector:
-    # s = [mdot, aileron, elevator, rudder]
-    m_dot = s[0]
-    ail = s[1]
-    elev = s[2]
-    rdr = s[3]
-
-    psi = 0  # don't care, doesn't effect dynamics
-    r_nb = pyecca.Mrp.from_euler(ca.vertcat(phi, theta, psi))
-
-    p_n = ca.vertcat(0, 0, 0)
-
-    # vt, alpha, theta, q, h, pos
-    x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
-    
-    # mdot, aileron, elevator, rudder
-    u = ca.vertcat(m_dot, ail, elev, rdr)
-    return x, u
-
-def constraint(s, v_b, phi, theta, omega_b, m_fuel, rhs):
-    x, u = constrain(s, v_b, phi, theta, omega_b, m_fuel)
-    x_dot = rhs(x, u)
-
-    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
-    # r_nb = x[3:7]  # modified rodrigues parameters
-    # v_b = x[7:10]  # inertial velocity expressed in body components
-    # p_n = x[10:13]  # positon in nav frame
-    # m_fuel = x[13]  # mass
-    
-    return ca.vertcat(
-        x_dot[0], x_dot[1], x_dot[2],
-        x_dot[7], x_dot[8], x_dot[9])  # force/moment balance, as close as we can get
-
-def objective(s, vt, h, q, gamma):
-    return 0  # ignore
-
-def trim(vt, h, q, gamma, s0=np.zeros(3)):
-    s = ca.SX.sym('s', 3)
-    nlp = {'x': s,
-           'f': objective(s, vt=vt, h=h, q=q, gamma=gamma),
-            'g': constraint(s, vt=vt, h=h, q=q, gamma=gamma)}
-    S = ca.nlpsol('S', 'ipopt', nlp, {
-        'print_time': 0,
-        'ipopt': {
-            'sb': 'yes',
-            'print_level': 0,
-            }
-        })
-    # s = [thtl, elev_deg, alpha, phi]
-    res = S(x0=s0, lbg=[0, 0, 0], ubg=[0, 0, 0],
-            lbx=[0, -20, -np.deg2rad(5)],
-            ubx=[10, 20, np.deg2rad(15)])
-    stats = S.stats()
-    if not stats['success']:
-        raise ValueError('Trim failed to converge', stats['return_status'])
-    s_opt = res['x']
-    x0, u0 = constrain(s_opt, vt, h, q, gamma)
-    return {
-        'x0': np.array(x0).reshape(-1),
-        'u0': np.array(u0).reshape(-1),
-        's': np.array(s_opt).reshape(-1),
-        'g': np.array(res['g'])
-    }
-
-
 def simulate(rocket, x0, p0, dt=0.005, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
@@ -426,6 +359,124 @@ def code_generation():
     gen.add(f_control)
     gen.add(f_u_to_fin)
     gen.generate()
+
+
+def constrain(s, vt, gamma, m_fuel):
+    # s is our design vector:
+    m_dot = s[0]
+    alpha = s[1]
+    beta = s[2]
+    ail = s[3]
+    elev = s[4]
+    rdr = s[5]
+
+    v_b = vt*ca.vertcat(ca.cos(alpha)*ca.cos(beta), ca.sin(beta), ca.sin(alpha)*ca.cos(beta))
+
+    phi = 0
+    theta = gamma + alpha
+    psi = 0
+
+    omega_b = ca.vertcat(0, 0, 0)
+    r_nb = so3.Mrp.from_euler(ca.vertcat(phi, theta, psi))
+
+    p_n = ca.vertcat(0, 0, 0)
+
+    # vt, alpha, theta, q, h, pos
+    x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
+    
+    # mdot, aileron, elevator, rudder
+    u = ca.vertcat(m_dot, ail, elev, rdr)
+    return x, u
+
+def constraint(s, vt, gamma, m_fuel, rhs, p):
+    x, u = constrain(s, vt, gamma, m_fuel)
+    x_dot = rhs(x, u, p)
+
+    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
+    # r_nb = x[3:7]  # modified rodrigues parameters
+    # v_b = x[7:10]  # inertial velocity expressed in body components
+    # p_n = x[10:13]  # positon in nav frame
+    # m_fuel = x[13]  # mass
+    return ca.vertcat(
+        x_dot[0],
+        x_dot[1],
+        x_dot[2],
+        )
+
+def objective(s, vt, gamma, m_fuel, rhs, p):
+    x, u = constrain(s, vt, gamma, m_fuel)
+    x_dot = rhs(x, u, p)
+
+    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
+    # r_nb = x[3:7]  # modified rodrigues parameters
+    # v_b = x[7:10]  # inertial velocity expressed in body components
+    # p_n = x[10:13]  # positon in nav frame
+    # m_fuel = x[13]  # mass
+    return x_dot[7]**2 + x_dot[8]**2 + x_dot[9]**2
+
+
+def trim(vt, gamma, m_fuel, rhs, p, s0=None):
+    if s0 is None:
+        s0 = [100, 0, 0, 0, 0, 0]
+    s = ca.SX.sym('s', 6)
+    nlp = {'x': s,
+           'f': objective(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p),
+            'g': constraint(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p)}
+    S = ca.nlpsol('S', 'ipopt', nlp, {
+        'print_time': 0,
+        'ipopt': {
+            'sb': 'yes',
+            'print_level': 0,
+            }
+        })
+
+    # s = [m_dot, alpha, beta, elev, ail, rdr]
+    m_dot = s[0]
+    alpha = s[1]
+    beta = s[2]
+    ail = s[3]
+    elv = s[4]
+    rdr = s[5]
+    res = S(x0=s0,
+            lbg=[0, 0, 0], ubg=[0, 0, 0],
+            lbx=[0, -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20)],
+            ubx=[10, np.deg2rad(20), np.deg2rad(20), np.deg2rad(20), np.deg2rad(20), np.deg2rad(20)]
+            )
+    stats = S.stats()
+    if not stats['success']:
+        raise ValueError('Trim failed to converge', stats['return_status'], res)
+    s_opt = res['x']
+    x0, u0 = constrain(s_opt, vt, gamma, m_fuel)
+    return {
+        'x0': np.array(ca.DM(x0)).reshape(-1),
+        'u0': np.array(ca.DM(u0)).reshape(-1),
+        's': np.array(ca.DM(s_opt)).reshape(-1),
+        'f': float(res['f']),
+        'g': np.array(ca.DM(res['g'])).reshape(-1),
+        'status': stats['return_status']
+    }
+
+
+def do_trim():
+    rocket = rocket_equations()
+    x0, p0 = rocket['initialize'](90)
+    gamma_deg = 15
+    res = trim(vt=100, gamma=np.deg2rad(gamma_deg), m_fuel=0.8, rhs=rocket['rhs'], p=p0)
+    s= res['s']
+    x = res['x0']
+    m_dot = s[0]
+    alpha_deg = np.rad2deg(s[1])
+    beta_deg = np.rad2deg(s[2])
+    ail_deg = np.rad2deg(s[3])
+    elv_deg = np.rad2deg(s[4])
+    rdr_deg = np.rad2deg(s[5])
+    theta_deg = gamma_deg + alpha_deg
+
+    fmt_str = 'status:\t{:s}\nf:\t{:5.3f}\ng:\t{:s}\nm_dot:\t{:5.3f} kg/s\nalpha:\t{:5.3f} deg\nbeta:\t{:5.3f} deg\n' \
+            'ail:\t{:5.3f} deg\nelv:\t{:5.3f} deg\nrdr:\t{:5.3f} deg\ntheta:\t{:5.3f} deg'
+    print(fmt_str.format(
+        res['status'], res['f'], str(res['g']),
+        m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
     
 
 def run():
@@ -437,6 +488,9 @@ def run():
     plt.savefig('rocket.png')
     plt.show()
 
-    code_generation()
 
-run()
+if __name__ == "__main__":
+    # run()
+    # code_generation()
+    do_trim()
+
