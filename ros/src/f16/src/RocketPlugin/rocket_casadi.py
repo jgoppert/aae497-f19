@@ -157,12 +157,12 @@ def rocket_equations(jit=True):
     # these controls are just test controls to make sure the fins are working
     u_control[0] = 0.1  # mass flow rate
     u_control[1] = schedule(t, 0, [ # aileron
-        (15, 0.1), (20, -0.1), (25, 0) # roll maneuver
+        (10, 0.1), (13, -0.1), (16, 0) # roll maneuver
         ])
     u_control[2] = schedule(t, 0, [ # elevator
-        (1, -0.1), (1.1, -0.2), (1.2, -0.3), # initial fin deflection to go horizontal
-        (5, -0.2), (5.1, -0.1), (5.2, 0), (5.3, 0.1), (5.4, 0.2),  # transition to horizontal flight
-        (14, 0.1), (14.2, 0.0)  # prepare for roll
+        (1, -0.1), (1.1, -0.2), (1.2, -0.3),  # initial fin deflection to go horizontal
+        (4.2, -0.2), (4.3, -0.1), (4.4, 0.0), (4.5, 0.1), (4.6, 0.2), # transition to horizontal flight
+        (9.0, 0.1), (9.1, 0.0)  # prepare for roll
         ])
     u_control[3] = schedule(t, 0, [ # rudder
         (6, 0.1), (6.1, 0.2), (6.3, 0.3), (6.4, 0.4), (6.5, 0.5), # turn
@@ -181,7 +181,7 @@ def rocket_equations(jit=True):
     # x: omega_b, r_nb, v_b, p_n, m_fuel
     x0 = ca.vertcat(omega0_b, r0_nb, v0_b, p0_n, m0_fuel)
     #     g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
-    p0 = [9.8, 1.0, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
+    p0 = [9.8, 0.05, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
     initialize = ca.Function('initialize', [pitch_deg], [x0, p0])
 
     return {
@@ -345,8 +345,8 @@ def simulate(rocket, x0, p0, dt=0.005, t0=0, tf=5):
         'u': []
     }
     for t in np.arange(t0, tf, dt):
-        data['x'].append(np.array(x).reshape(-1))
         data['t'].append(t)
+        data['x'].append(np.array(x).reshape(-1))
         data['u'].append(np.array(u).reshape(-1))
         u = rocket['control'](x, p0, t, dt)
         x = rocket['predict'](x, u, p0, t, dt)
@@ -430,9 +430,9 @@ def code_generation():
 
 def run():
     rocket = rocket_equations()
-    x0, p0 = rocket['initialize'](70)
+    x0, p0 = rocket['initialize'](np.rad2deg(1.2))
     # m_dot, aileron, elevator, rudder
-    data = simulate(rocket, x0, p0, tf=10)
+    data = simulate(rocket, x0, p0, tf=15)
     analyze_data(data)
     plt.savefig('rocket.png')
     plt.show()
