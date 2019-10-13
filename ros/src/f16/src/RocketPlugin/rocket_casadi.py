@@ -109,10 +109,9 @@ def rocket_equations(jit=True):
         perp_wind_dir = ca.if_else(ca.fabs(norm_perp) > vel_tol, 
             perp_wind_dir/norm_perp, up)
         CL = CL0 + CL_alpha*(alpha + angle)
-        # model stall
-        CL = ca.if_else(ca.fabs(alpha) < 0.4, CL, 0)
         CD = CD0 + K*(CL - CL0)**2
-        L = CL*q*s_fin
+        # model stall as no lift if above 23 deg.
+        L = ca.if_else(ca.fabs(alpha)<0.4, CL*q*s_fin, 0)
         D = CD*q*s_fin
         FAi_b = L*perp_wind_dir - D*rel_wind_dir
         FA_b += FAi_b
