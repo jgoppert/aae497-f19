@@ -9,6 +9,14 @@ import pyecca.lie.so3 as so3
 from pyecca.util import rk4
 
 
+def u_to_fin(u):
+    ail = u[1]
+    elv = u[2]
+    rdr = u[3]
+    # top, left, down right
+    return ca.vertcat(ail - rdr, ail - elv, ail + rdr, ail + elv)
+ 
+
 def rocket_equations(jit=True):
     x = ca.SX.sym('x', 14)
     u = ca.SX.sym('u', 4)
@@ -25,9 +33,7 @@ def rocket_equations(jit=True):
     
     # Input: u
     m_dot = ca.if_else(m_fuel > 0, u[0], 0)
-    aileron = u[1]
-    elevator = u[2]
-    rudder = u[3]
+    fin = u_to_fin(u)
     
     # Parameters: p
     g = p[0]  # gravity
@@ -66,22 +72,22 @@ def rocket_equations(jit=True):
         'top': {
             'fwd': [1, 0, 0],
             'up': [0, 1, 0],
-            'mix': aileron + rudder,
+            'angle': fin[0]
         },
         'left': {
             'fwd': [1, 0, 0],
             'up': [0, 0, -1],
-            'mix': aileron + elevator,
+            'angle': fin[1]
         },
         'down': {
             'fwd': [1, 0, 0],
             'up': [0, -1, 0],
-            'mix': aileron - rudder,
+            'angle': fin[2]
         },
         'right': {
             'fwd': [1, 0, 0],
             'up': [0, 0, 1],
-            'mix': aileron - elevator,
+            'angle': fin[3]
         },
     }
     rel_wind_dir = v_b/VT
@@ -93,7 +99,7 @@ def rocket_equations(jit=True):
     for key, data in fins.items():
         fwd = data['fwd']
         up = data['up']
-        mix = data['mix']
+        angle = data['angle']
         U = ca.dot(fwd, v_b)
         W = ca.dot(up, v_b)
         side = ca.cross(fwd, up)
@@ -102,15 +108,14 @@ def rocket_equations(jit=True):
         norm_perp = ca.norm_2(perp_wind_dir)
         perp_wind_dir = ca.if_else(ca.fabs(norm_perp) > vel_tol, 
             perp_wind_dir/norm_perp, up)
-        CL = CL0 + CL_alpha*(alpha + mix)
-        # model stall
-        CL = ca.if_else(ca.fabs(alpha) < 0.4, CL, 0)
+        CL = CL0 + CL_alpha*(alpha + angle)
         CD = CD0 + K*(CL - CL0)**2
-        L = CL*q*s_fin
+        # model stall as no lift if above 23 deg.
+        L = ca.if_else(ca.fabs(alpha)<0.4, CL*q*s_fin, 0)
         D = CD*q*s_fin
         FAi_b = L*perp_wind_dir - D*rel_wind_dir
         FA_b += FAi_b
-        MA_b += ca.cross(-l_fin*fwd + w_fin*side, FAi_b)
+        MA_b += ca.cross(-l_fin*fwd - w_fin*side, FAi_b)
 
     FA_b = ca.if_else(ca.fabs(VT) > vel_tol, FA_b, ca.SX.zeros(3))
     MA_b = ca.if_else(ca.fabs(VT) > vel_tol, MA_b, ca.SX.zeros(3))
@@ -141,8 +146,28 @@ def rocket_equations(jit=True):
     x1[3:7] = so3.Mrp.shadow_if_necessary(x1[3:7])
     predict = ca.Function('predict', [x0, u, p, t0, h], [x1], {'jit': jit})
 
+    def schedule(t, start, ty_pairs):
+        val = start
+        for ti, yi in ty_pairs:
+            val = ca.if_else(t > ti, yi, val)
+        return val
+
     # control
-    u_control = ca.vertcat(0.1, 0.1*ca.sin(2*ca.pi*0.5*t), 0, 0)
+    u_control = ca.SX.zeros(4)
+    # these controls are just test controls to make sure the fins are working
+    u_control[0] = 0.1  # mass flow rate
+    u_control[1] = schedule(t, 0, [ # aileron
+        (10, 0.1), (13, -0.1), (16, 0) # roll maneuver
+        ])
+    u_control[2] = schedule(t, 0, [ # elevator
+        (1, -0.1), (1.1, -0.2), (1.2, -0.3),  # initial fin deflection to go horizontal
+        (4.2, -0.2), (4.3, -0.1), (4.4, 0.0), (4.5, 0.1), (4.6, 0.2), # transition to horizontal flight
+        (9.0, 0.1), (9.1, 0.0)  # prepare for roll
+        ])
+    u_control[3] = schedule(t, 0, [ # rudder
+        (6, 0.1), (6.1, 0.2), (6.3, 0.3), (6.4, 0.4), (6.5, 0.5), # turn
+        (6.6, 0.4), (6.7, 0.3), (6.8, 0.2), (6.9, 0.1), (7.0, 0.0)
+        ])
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -152,11 +177,11 @@ def rocket_equations(jit=True):
     r0_nb = so3.Mrp.from_euler(ca.vertcat(0, pitch_deg*ca.pi/180, 0))
     v0_b = ca.vertcat(0, 0, 0)
     p0_n = ca.vertcat(0, 0, 0)
-    m0_fuel = 0.2
+    m0_fuel = 0.8
     # x: omega_b, r_nb, v_b, p_n, m_fuel
     x0 = ca.vertcat(omega0_b, r0_nb, v0_b, p0_n, m0_fuel)
     #     g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_emptpy, l_motor
-    p0 = [9.8, 1.0, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
+    p0 = [9.8, 0.05, 1.0, 1.0, 0.0, 350, 1.0, 0.05, 2*np.pi, 0, 0.01, 0.01, 0.05, 1.225, 0.2, 1.0]
     initialize = ca.Function('initialize', [pitch_deg], [x0, p0])
 
     return {
@@ -173,25 +198,25 @@ def rocket_equations(jit=True):
 
 
 def analyze_data(data):
-    plt.figure(figsize=(10, 17))
-    plt.subplot(321)
+    plt.figure(figsize=(20, 20))
+    plt.subplot(331)
     plt.title('fuel')
     plt.plot(data['t'], data['x'][:, 13])
     plt.xlabel('t, sec')
     plt.ylabel('mass, kg')
     plt.grid()
 
-    plt.subplot(322)
-    plt.title('velocity')
-    plt.plot(data['t'], data['x'][:, 7], label='v_X')
-    plt.plot(data['t'], data['x'][:, 8], label='v_Y')
-    plt.plot(data['t'], data['x'][:, 9], label='v_Z')
+    plt.subplot(332)
+    #plt.title('velocity')
+    plt.plot(data['t'], data['x'][:, 7], label='x')
+    plt.plot(data['t'], data['x'][:, 8], label='y')
+    plt.plot(data['t'], data['x'][:, 9], label='z')
     plt.xlabel('t, sec')
-    plt.ylabel('m/s')
+    plt.ylabel('body velocity, m/s')
     plt.grid()
     plt.legend()
     
-    plt.subplot(323)
+    plt.subplot(333)
     euler = np.array(
         [np.array(ca.DM(so3.Euler.from_mrp(x))).reshape(-1) for x in data['x'][:, 3:7]])
     plt.plot(data['t'], np.rad2deg(euler[:, 0]), label='roll')
@@ -200,129 +225,61 @@ def analyze_data(data):
     plt.legend()
     plt.grid()
     plt.xlabel('t, sec')
-    plt.ylabel('deg')
-    plt.title('euler')
+    plt.ylabel('euler angles, deg')
+    #plt.title('euler')
     
-    plt.subplot(324)
-    plt.title('angular velocity')
+    plt.subplot(334)
+    #plt.title('angular velocity')
     plt.plot(data['t'], data['x'][:, 0], label='x')
     plt.plot(data['t'], data['x'][:, 1], label='y')
     plt.plot(data['t'], data['x'][:, 2], label='z')
     plt.xlabel('t, sec')
-    plt.ylabel('rad/s')
+    plt.ylabel('angular velocity, rad/s')
     plt.grid()
     plt.legend()
     
-    plt.subplot(325)
-    plt.title('trajectory [side]')
+    plt.subplot(335)
+    #plt.title('trajectory [side]')
     plt.plot(data['x'][:, 10], -data['x'][:, 12])
     plt.xlabel('North, m')
     plt.ylabel('Altitude, m')
     plt.axis('equal')
     plt.grid()
     
-    plt.subplot(326)
-    plt.title('trajectory [top]')
+    plt.subplot(336)
+    #plt.title('trajectory [top]')
     plt.plot(data['x'][:, 11], data['x'][:, 10])
     plt.xlabel('East, m')
     plt.ylabel('North, m')
     plt.axis('equal')
     plt.grid()
 
-    plt.figure(figsize=(10, 17))
-    plt.title('control input')
+    plt.subplot(337)
+    #plt.title('control input')
     plt.plot(data['t'], data['u'][:, 0], label='mdot')
     plt.plot(data['t'], data['u'][:, 1], label='aileron')
     plt.plot(data['t'], data['u'][:, 2], label='elevator')
     plt.plot(data['t'], data['u'][:, 3], label='rudder')
     plt.xlabel('t, sec')
-    plt.ylabel('u')
+    plt.ylabel('control')
+    plt.legend()
     plt.grid()
 
 
-def constrain(s, v_b, phi, theta, omega_b, m_fuel):
-    
-    # s is our design vector:
-    # s = [mdot, aileron, elevator, rudder]
-    m_dot = s[0]
-    ail = s[1]
-    elev = s[2]
-    rdr = s[3]
-
-    psi = 0  # don't care, doesn't effect dynamics
-    r_nb = pyecca.Mrp.from_euler(ca.vertcat(phi, theta, psi))
-
-    p_n = ca.vertcat(0, 0, 0)
-
-    # vt, alpha, theta, q, h, pos
-    x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
-    
-    # mdot, aileron, elevator, rudder
-    u = ca.vertcat(m_dot, ail, elev, rdr)
-    return x, u
-
-def constraint(s, v_b, phi, theta, omega_b, m_fuel, rhs):
-    x, u = constrain(s, v_b, phi, theta, omega_b, m_fuel)
-    x_dot = rhs(x, u)
-
-    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
-    # r_nb = x[3:7]  # modified rodrigues parameters
-    # v_b = x[7:10]  # inertial velocity expressed in body components
-    # p_n = x[10:13]  # positon in nav frame
-    # m_fuel = x[13]  # mass
-    
-    return ca.vertcat(
-        x_dot[0], x_dot[1], x_dot[2],
-        x_dot[7], x_dot[8], x_dot[9])  # force/moment balance, as close as we can get
-
-
-def objective(s, v_b, phi, theta, omega_b, m_fuel):
-    return 0  # ignore
-
-
-def trim(s, v_b, phi, theta, omega_b, m_fuel, s0=np.zeros(4)):
-    s = ca.SX.sym('s', 4)
-    nlp = {'x': s,
-           'f': objective(s, vt=vt, h=h, q=q, gamma=gamma),
-            'g': constraint(s, v_b, phi, theta, omega_b, m_fuel)}
-    S = ca.nlpsol('S', 'ipopt', nlp, {
-        'print_time': 0,
-        'ipopt': {
-            'sb': 'yes',
-            'print_level': 0,
-            }
-        })
-    # s = [thtl, elev_deg, alpha, phi]
-    res = S(x0=s0, lbg=[0, 0, 0], ubg=[0, 0, 0],
-            lbx=[0, -20, -np.deg2rad(5)],
-            ubx=[10, 20, np.deg2rad(15)])
-    stats = S.stats()
-    if not stats['success']:
-        raise ValueError('Trim failed to converge', stats['return_status'])
-    s_opt = res['x']
-    x0, u0 = constrain(s_opt, vt, h, q, gamma)
-    return {
-        'x0': np.array(x0).reshape(-1),
-        'u0': np.array(u0).reshape(-1),
-        's': np.array(s_opt).reshape(-1),
-        'g': np.array(res['g'])
-    }
-
-
-def simulate(rocket, x0, u0, p0, dt=0.01, t0=0, tf=5):
+def simulate(rocket, x0, p0, dt=0.005, t0=0, tf=5):
     """
     An integrator using a fixed step runge-kutta approach.
     """
     x = x0
-    u = u0
+    u = rocket['control'](x0, p0, t0, dt)
     data = {
         't': [],
         'x': [],
         'u': []
     }
     for t in np.arange(t0, tf, dt):
-        data['x'].append(np.array(x).reshape(-1))
         data['t'].append(t)
+        data['x'].append(np.array(x).reshape(-1))
         data['u'].append(np.array(u).reshape(-1))
         u = rocket['control'](x, p0, t, dt)
         x = rocket['predict'](x, u, p0, t, dt)
@@ -366,7 +323,7 @@ def gazebo_equations():
     vel_FRB = ca.mtimes(C_FLT_FRB.T, vel_FLT)
     
     x = ca.vertcat(omega_FRB, r_NED_FRB, vel_FRB, pos_NED, m_fuel)
-    state_from_gz = ca.Function('gazebo_state', [x_gz], [x], ['x_gz'], ['x'])
+    state_from_gz = ca.Function('state_from_gz', [x_gz], [x], ['x_gz'], ['x'])
     return {
         'state_from_gz': state_from_gz,
         'C_NED_ENU': C_NED_ENU,
@@ -375,35 +332,165 @@ def gazebo_equations():
 
 
 def code_generation():
+    x = ca.SX.sym('x', 14)
     x_gz = ca.SX.sym('x_gz', 14)
     p = ca.SX.sym('p', 16)
     u = ca.SX.sym('u', 4)
+    t = ca.SX.sym('t')
+    dt = ca.SX.sym('dt')
     gz_eqs = gazebo_equations()
-    x = gz_eqs['state_from_gz'](x_gz)
+    f_state = gz_eqs['state_from_gz']
     eqs = rocket_equations()
     C_FLT_FRB = gz_eqs['C_FLT_FRB']
     F_FRB, M_FRB = eqs['force_moment'](x, u, p)
     F_FLT = ca.mtimes(C_FLT_FRB, F_FRB)
     M_FLT = ca.mtimes(C_FLT_FRB, M_FRB)
+    f_u_to_fin = ca.Function('rocket_u_to_fin', [u], [u_to_fin(u)], ['u'], ['fin'])
     f_force_moment = ca.Function('rocket_force_moment',
-        [x_gz, u, p], [F_FLT, M_FLT], ['x_gz', 'u', 'p'], ['F_FLT', 'M_FLT'])
+        [x, u, p], [F_FLT, M_FLT], ['x', 'u', 'p'], ['F_FLT', 'M_FLT'])
+    u_control = eqs['control'](x, p, t, dt)
+    f_control = ca.Function('rocket_control', [x, p, t, dt], [u_control],
+        ['x', 'p', 't', 'dt'], ['u'])
     gen = ca.CodeGenerator(
         'casadi_gen.c',
         {'main': False, 'mex': False, 'with_header': True, 'with_mem': True})
+    gen.add(f_state)
     gen.add(f_force_moment)
+    gen.add(f_control)
+    gen.add(f_u_to_fin)
     gen.generate()
+
+
+def constrain(s, vt, gamma, m_fuel):
+    # s is our design vector:
+    m_dot = s[0]
+    alpha = s[1]
+    beta = s[2]
+    ail = s[3]
+    elev = s[4]
+    rdr = s[5]
+
+    v_b = vt*ca.vertcat(ca.cos(alpha)*ca.cos(beta), ca.sin(beta), ca.sin(alpha)*ca.cos(beta))
+
+    phi = 0
+    theta = gamma + alpha
+    psi = 0
+
+    omega_b = ca.vertcat(0, 0, 0)
+    r_nb = so3.Mrp.from_euler(ca.vertcat(phi, theta, psi))
+
+    p_n = ca.vertcat(0, 0, 0)
+
+    # vt, alpha, theta, q, h, pos
+    x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
+    
+    # mdot, aileron, elevator, rudder
+    u = ca.vertcat(m_dot, ail, elev, rdr)
+    return x, u
+
+def constraint(s, vt, gamma, m_fuel, rhs, p):
+    x, u = constrain(s, vt, gamma, m_fuel)
+    x_dot = rhs(x, u, p)
+
+    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
+    # r_nb = x[3:7]  # modified rodrigues parameters
+    # v_b = x[7:10]  # inertial velocity expressed in body components
+    # p_n = x[10:13]  # positon in nav frame
+    # m_fuel = x[13]  # mass
+    return ca.vertcat(
+        x_dot[0],
+        x_dot[1],
+        x_dot[2],
+        )
+
+def objective(s, vt, gamma, m_fuel, rhs, p):
+    x, u = constrain(s, vt, gamma, m_fuel)
+    x_dot = rhs(x, u, p)
+
+    # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
+    # r_nb = x[3:7]  # modified rodrigues parameters
+    # v_b = x[7:10]  # inertial velocity expressed in body components
+    # p_n = x[10:13]  # positon in nav frame
+    # m_fuel = x[13]  # mass
+    return x_dot[7]**2 + x_dot[8]**2 + x_dot[9]**2
+
+
+def trim(vt, gamma, m_fuel, rhs, p, s0=None):
+    if s0 is None:
+        s0 = [100, 0, 0, 0, 0, 0]
+    s = ca.SX.sym('s', 6)
+    nlp = {'x': s,
+           'f': objective(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p),
+            'g': constraint(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p)}
+    S = ca.nlpsol('S', 'ipopt', nlp, {
+        'print_time': 0,
+        'ipopt': {
+            'sb': 'yes',
+            'print_level': 0,
+            }
+        })
+
+    # s = [m_dot, alpha, beta, elev, ail, rdr]
+    m_dot = s[0]
+    alpha = s[1]
+    beta = s[2]
+    ail = s[3]
+    elv = s[4]
+    rdr = s[5]
+    res = S(x0=s0,
+            lbg=[0, 0, 0], ubg=[0, 0, 0],
+            lbx=[0, -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20), -np.deg2rad(20)],
+            ubx=[10, np.deg2rad(20), np.deg2rad(20), np.deg2rad(20), np.deg2rad(20), np.deg2rad(20)]
+            )
+    stats = S.stats()
+    if not stats['success']:
+        raise ValueError('Trim failed to converge', stats['return_status'], res)
+    s_opt = res['x']
+    x0, u0 = constrain(s_opt, vt, gamma, m_fuel)
+    return {
+        'x0': np.array(ca.DM(x0)).reshape(-1),
+        'u0': np.array(ca.DM(u0)).reshape(-1),
+        's': np.array(ca.DM(s_opt)).reshape(-1),
+        'f': float(res['f']),
+        'g': np.array(ca.DM(res['g'])).reshape(-1),
+        'status': stats['return_status']
+    }
+
+
+def do_trim():
+    rocket = rocket_equations()
+    x0, p0 = rocket['initialize'](90)
+    gamma_deg = 15
+    res = trim(vt=100, gamma=np.deg2rad(gamma_deg), m_fuel=0.8, rhs=rocket['rhs'], p=p0)
+    s= res['s']
+    x = res['x0']
+    m_dot = s[0]
+    alpha_deg = np.rad2deg(s[1])
+    beta_deg = np.rad2deg(s[2])
+    ail_deg = np.rad2deg(s[3])
+    elv_deg = np.rad2deg(s[4])
+    rdr_deg = np.rad2deg(s[5])
+    theta_deg = gamma_deg + alpha_deg
+
+    fmt_str = 'status:\t{:s}\nf:\t{:5.3f}\ng:\t{:s}\nm_dot:\t{:5.3f} kg/s\nalpha:\t{:5.3f} deg\nbeta:\t{:5.3f} deg\n' \
+            'ail:\t{:5.3f} deg\nelv:\t{:5.3f} deg\nrdr:\t{:5.3f} deg\ntheta:\t{:5.3f} deg'
+    print(fmt_str.format(
+        res['status'], res['f'], str(res['g']),
+        m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
     
 
 def run():
     rocket = rocket_equations()
-    x0, p0 = rocket['initialize'](70)
+    x0, p0 = rocket['initialize'](np.rad2deg(1.2))
     # m_dot, aileron, elevator, rudder
-    u0 = [0.1, 0.01, 0.0, 0.0]
-    data = simulate(rocket, x0, u0, p0, tf=10)
+    data = simulate(rocket, x0, p0, tf=15)
     analyze_data(data)
     plt.savefig('rocket.png')
     plt.show()
 
-    code_generation()
 
-run()
+if __name__ == "__main__":
+    # run()
+    # code_generation()
+    do_trim()
+

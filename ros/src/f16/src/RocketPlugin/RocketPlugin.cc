@@ -16,14 +16,12 @@
 */
 
 #include <functional>
-#include <string>
 #include "math.h"
+#include <string>
 #include <sdf/sdf.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
 #include "RocketPlugin.hh"
 
 
@@ -33,6 +31,9 @@ GZ_REGISTER_MODEL_PLUGIN(RocketPlugin)
 
 ////////////////////////////////////////////////////////////////////////////////
 RocketPlugin::RocketPlugin():
+    state_from_gz(state_from_gz_functions()),
+    rocket_u_to_fin(rocket_u_to_fin_functions()),
+    rocket_control(rocket_control_functions()),
     rocket_force_moment(rocket_force_moment_functions())
 {
     std::cout << "hello rocket plugin" << std::endl;
@@ -95,14 +96,22 @@ void RocketPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   GZ_ASSERT(_sdf, "RocketPlugin _sdf pointer is NULL");
   this->model = _model;
 
-  // Find body link to apply
   if (!this->FindLink("body", _sdf, this->body)) {
     GZ_ASSERT(false, "RocketPlugin failed to find body");
   }
 
+  // Find body link to apply
+  for (int i=0; i<4; i++ ) {
+      std::string name = "fin" + std::to_string(i);
+      if (!this->FindJoint(name, _sdf, this->fin[i])) {
+        std::string error = "RocketPlugin failed to find " + name;
+        GZ_ASSERT(false, error.c_str());
+      }
+  }
+
   // Disable gravity, we will handle this in plugin
   this->body->SetGravityMode(false);
-  this->body->GetInertial()->SetMass(0.4); //  set your total mass with fuel here
+  this->body->GetInertial()->SetMass(0.8); //  set your total mass with fuel here
 
 
   // Update time.
@@ -122,17 +131,15 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
   std::lock_guard<std::mutex> lock(this->mutex);
 
   gazebo::common::Time curTime = this->model->GetWorld()->SimTime();
+  double t = this->model->GetWorld()->SimTime().Double();
 
   if (curTime > this->lastUpdateTime)
   {
+    // elapsed time
     double dt = (curTime - this->lastUpdateTime).Double();
-    auto inertial = this->body->GetInertial();
-
-    // state
-    double m = inertial->Mass();
+    this->lastUpdateTime = curTime;
 
     // parameters
-    double m_dot = 0.1;
     const double g = 9.8;
     const double Jx = 0.05;
     const double Jy = 1;
@@ -149,42 +156,69 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     const double rho = 1.225;
     const double m_empty = 0.2;
     const double l_motor = 1.0;
+    double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
 
-    // integration for rocket mass flow
-    m -= m_dot*dt;
-    if (m < m_empty) {
-      m = m_empty;
-      m_dot = 0;
-    }
-    float m_fuel = m - m_empty;
-    inertial->SetMass(m);
-    inertial->SetInertiaMatrix(Jx + m_fuel*l_motor*l_motor, Jy + m_fuel*l_motor*l_motor, Jz, 0, 0, 0);
-    this->lastUpdateTime = curTime;
-
+    // state
+    auto inertial = this->body->GetInertial();
+    double m = inertial->Mass();
     auto vel_ENU = this->body->RelativeLinearVel();
     auto omega_ENU = this->body->RelativeAngularVel();
     auto pose = this->body->WorldPose();
     auto q_ENU_FLT = pose.Rot();
     auto pos_ENU = pose.Pos();
+    double m_fuel = m - m_empty;
 
-    double x[14] = {
+    // native gazebo state
+    double x_gz[14] = {
       omega_ENU.X(), omega_ENU.Y(), omega_ENU.Z(),
       q_ENU_FLT.W(), q_ENU_FLT.X(), q_ENU_FLT.Y(), q_ENU_FLT.Z(),
       vel_ENU.X(), vel_ENU.Y(), vel_ENU.Z(),
       pos_ENU.X(), pos_ENU.Y(), pos_ENU.Z(),
       m_fuel};
 
-    double u[4] = {m_dot, 1.0, 1.0, 1.0};
-    double p[16] = {g, Jx, Jy, Jz, Jxz, ve, l_fin, w_fin, CL_alpha, CL0, CD0, K, s, rho, m_empty, l_motor};
-    double F_FLT[3] = {0, 0, 0};
-    double M_FLT[3] = {0, 0, 0};
+    // state from gazebo state
+    double x[14];
+    state_from_gz.arg(0, x_gz);
+    state_from_gz.res(0, x);
+    state_from_gz.eval();
 
+    // control
+    double u[4];
+    rocket_control.arg(0, x);
+    rocket_control.arg(1, p);
+    rocket_control.arg(2, &t);
+    rocket_control.arg(3, &dt);
+    rocket_control.res(0, u);
+    rocket_control.eval();
+
+    // force moment
+    double F_FLT[3];
+    double M_FLT[3];
     rocket_force_moment.arg(0, x);
     rocket_force_moment.arg(1, u);
     rocket_force_moment.arg(2, p);
     rocket_force_moment.res(0, F_FLT);
     rocket_force_moment.res(1, M_FLT);
     rocket_force_moment.eval();
+
+    // set joints
+    double fin[4];
+    rocket_u_to_fin.arg(0, u);
+    rocket_u_to_fin.res(0, fin);
+    rocket_u_to_fin.eval();
+    for (int i=0; i<4; i++) {
+      this->fin[i]->SetPosition(0, fin[i]);
+    }
+
+    // integration for rocket mass flow
+    double m_dot = u[0];
+    m -= m_dot*dt;
+    if (m < m_empty) {
+      m = m_empty;
+      m_dot = 0;
+    }
+    inertial->SetMass(m);
+    inertial->SetInertiaMatrix(Jx + m_fuel*l_motor*l_motor, Jy + m_fuel*l_motor*l_motor, Jz, 0, 0, 0);
 
     // debug
     for (int i=0; i<14; i++) {
@@ -201,12 +235,12 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     gzdbg << "force: " << F_FLT[0] << " " << F_FLT[1] << " " << F_FLT[2] << std::endl;
     gzdbg << "moment: " << M_FLT[0] << " " << M_FLT[1] << " " << M_FLT[2] << std::endl;
 
-    // chceck that forces/moments finite before we apply them
+    // apply forces and moments
     for (int i=0; i<3; i++) {
+      // check that forces/moments finite before we apply them
       GZ_ASSERT(isfinite(F_FLT[i]), "non finite force");
       GZ_ASSERT(isfinite(M_FLT[i]), "non finite moment");
     }
-
     this->body->AddRelativeForce(ignition::math::v4::Vector3d(F_FLT[0], F_FLT[1], F_FLT[2]));
     this->body->AddRelativeTorque(ignition::math::v4::Vector3d(M_FLT[0], M_FLT[1], M_FLT[2]));
   }
