@@ -275,14 +275,16 @@ def constraint(s, v_b, phi, theta, omega_b, m_fuel, rhs):
         x_dot[0], x_dot[1], x_dot[2],
         x_dot[7], x_dot[8], x_dot[9])  # force/moment balance, as close as we can get
 
-def objective(s, vt, h, q, gamma):
+
+def objective(s, v_b, phi, theta, omega_b, m_fuel):
     return 0  # ignore
 
-def trim(vt, h, q, gamma, s0=np.zeros(3)):
-    s = ca.SX.sym('s', 3)
+
+def trim(s, v_b, phi, theta, omega_b, m_fuel, s0=np.zeros(4)):
+    s = ca.SX.sym('s', 4)
     nlp = {'x': s,
            'f': objective(s, vt=vt, h=h, q=q, gamma=gamma),
-            'g': constraint(s, vt=vt, h=h, q=q, gamma=gamma)}
+            'g': constraint(s, v_b, phi, theta, omega_b, m_fuel)}
     S = ca.nlpsol('S', 'ipopt', nlp, {
         'print_time': 0,
         'ipopt': {
