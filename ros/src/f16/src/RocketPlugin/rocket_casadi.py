@@ -472,9 +472,9 @@ def do_trim(vt, gamma_deg, m_fuel):
 
     fmt_str = 'status:\t{:s}\nf:\t{:5.3f}\ng:\t{:s}\nm_dot:\t{:5.3f} kg/s\nalpha:\t{:5.3f} deg\nbeta:\t{:5.3f} deg\n' \
             'ail:\t{:5.3f} deg\nelv:\t{:5.3f} deg\nrdr:\t{:5.3f} deg\ntheta:\t{:5.3f} deg'
-    print(fmt_str.format(
-        res['status'], res['f'], str(res['g']),
-        m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
+    #print(fmt_str.format(
+    #    res['status'], res['f'], str(res['g']),
+    #    m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
 
     # s: m_dot, alpha, beta, ail, elev, rdr
     # u:  m_dot, aileron, elevator, rudder
