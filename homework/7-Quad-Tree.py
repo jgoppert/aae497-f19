@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from random import random
 from random import seed
+import timeit
 
 seed(4)
 
@@ -128,8 +129,16 @@ def getPtsCircQuadTree(topQuad,centX,centY,radius):
             enclosedParts.append(aPart)
     
     return enclosedParts
+
+def getPtsCircBrute(parts,centX,centY,radius):
+    enclosedParts = []
+    for aPart in parts:
+        dist = np.sqrt((aPart.xpos - centX)**2 + (aPart.ypos - centY)**2)
+        if dist<=radius:
+            enclosedParts.append(aPart)
     
-#END CLASS AND METHOD DEFINITIONS----------------------------------------------
+    return enclosedParts
+#END CLASS AND HELPING METHOD DEFINITIONS----------------------------------------------
 #BEGIN EVALUATION/"MAIN" CODE--------------------------------------------------
 
 #Problem parameters
@@ -148,17 +157,32 @@ for i in range(0,numParticles-1):
 #----------------------
 
 #build Quad
-initialQuad = Quad(xlims[0],xlims[1],ylims[0],ylims[1])
-initialQuad.particles = particles
-buildQuadTree(initialQuad,0)
+def build_quad():
+    initialQuad = Quad(xlims[0],xlims[1],ylims[0],ylims[1])
+    initialQuad.particles = particles
+    buildQuadTree(initialQuad,0)
+    return initialQuad
+
+t_build_quad = timeit.timeit(build_quad, number = 1)
+
+initialQuad = build_quad()
 #----------
 
 #search Quad
-encParticles = getPtsCircQuadTree(initialQuad,centX,centY,radius)
+def search_quad():
+    encParticles = getPtsCircQuadTree(initialQuad,centX,centY,radius)
+    return encParticles
+
+t_search_quad = timeit.timeit(search_quad, number = 1)
+
+encParticles = search_quad()
 #-----------
 
 #compute Brute
+def search_brute():
+    return getPtsCircBrute(particles,centX,centY,radius)
 
+t_search_brute = timeit.timeit(search_brute, number = 1)
 #-------------
 
 #plot Quadtree Visual
@@ -170,7 +194,6 @@ plt.gca().add_artist(circ)
 
 plt.plot([particleX.xpos for particleX in encParticles], [particleY.ypos for particleY in encParticles],'r.')
 #--------------------
-
 
 
 
