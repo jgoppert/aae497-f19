@@ -95,20 +95,85 @@ def plotQuadTree(quadBase):
         plotQuadTree(quadBase.childQuads[2])
         plotQuadTree(quadBase.childQuads[3])
     
+def getPointsOfQuadOverlap(topQuad,rectLb,rectRb,rectDb,rectUb):
+    if topQuad.doesRectOverlap(rectLb,rectRb,rectDb,rectUb):
+        if topQuad.isQuadEnclosed(rectLb,rectRb,rectDb,rectUb) or topQuad.childQuads[0]==None:
+            #good just return all of topQuad points (assuming it has them and that this has been checked?)
+            return topQuad.particles
+            
+        else:
+            #continue down the list for each quad
+            partList = []
+            partList = partList + getPointsOfQuadOverlap(topQuad.childQuads[0],rectLb,rectRb,rectDb,rectUb)
+            partList = partList + getPointsOfQuadOverlap(topQuad.childQuads[1],rectLb,rectRb,rectDb,rectUb)
+            partList = partList + getPointsOfQuadOverlap(topQuad.childQuads[2],rectLb,rectRb,rectDb,rectUb)
+            partList = partList + getPointsOfQuadOverlap(topQuad.childQuads[3],rectLb,rectRb,rectDb,rectUb)
+            
+            return partList
+    else:
+        #dont get any of these points
+        return []
+    
+def getPtsCircQuadTree(topQuad,centX,centY,radius):
+    rectRb = centX + radius
+    rectLb = centX - radius
+    rectUb = centY + radius
+    rectDb = centY - radius
+    partCandidates = getPointsOfQuadOverlap(topQuad,rectLb,rectRb,rectDb,rectUb)
+    
+    enclosedParts = []
+    for aPart in partCandidates:
+        dist = np.sqrt((aPart.xpos - centX)**2 + (aPart.ypos - centY)**2)
+        if dist<=radius:
+            enclosedParts.append(aPart)
+    
+    return enclosedParts
+    
+#END CLASS AND METHOD DEFINITIONS----------------------------------------------
+#BEGIN EVALUATION/"MAIN" CODE--------------------------------------------------
 
+#Problem parameters
 numParticles = 1000
 particles = []
 xlims = [0,60]
 ylims = [0,30]
+radius = 5
+centX = 20
+centY = 20
+#------------------
 
+#set particle positions
 for i in range(0,numParticles-1):
     particles.append(particle(random()*(xlims[1]-xlims[0])+xlims[0],random()*(ylims[1]-ylims[0])+ylims[0]))
+#----------------------
 
-plt.plot([particleX.xpos for particleX in particles], [particleY.ypos for particleY in particles],'x')
-
+#build Quad
 initialQuad = Quad(xlims[0],xlims[1],ylims[0],ylims[1])
 initialQuad.particles = particles
-
 buildQuadTree(initialQuad,0)
+#----------
+
+#search Quad
+encParticles = getPtsCircQuadTree(initialQuad,centX,centY,radius)
+#-----------
+
+#compute Brute
+
+#-------------
+
+#plot Quadtree Visual
+plt.plot([particleX.xpos for particleX in particles], [particleY.ypos for particleY in particles],'.')
 plotQuadTree(initialQuad)
 plt.gca().set_aspect('equal', 'box')
+circ = plt.Circle((centX, centY), radius, color='g', fill=False)
+plt.gca().add_artist(circ)
+
+plt.plot([particleX.xpos for particleX in encParticles], [particleY.ypos for particleY in encParticles],'r.')
+#--------------------
+
+
+
+
+
+
+
