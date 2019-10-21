@@ -5,6 +5,7 @@ Created on Sun Oct 20 14:51:58 2019
 @author: cohen
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from random import random
@@ -95,7 +96,26 @@ def plotQuadTree(quadBase):
         plotQuadTree(quadBase.childQuads[1])
         plotQuadTree(quadBase.childQuads[2])
         plotQuadTree(quadBase.childQuads[3])
-    
+
+def plotQuadTreeSearchRegress(topQuad,rectLb,rectRb,rectDb,rectUb,ax):
+    if topQuad.doesRectOverlap(rectLb,rectRb,rectDb,rectUb):
+        if topQuad.isQuadEnclosed(rectLb,rectRb,rectDb,rectUb) or topQuad.childQuads[0]==None:
+            #good just return all of topQuad points (assuming it has them and that this has been checked?)
+            rect = matplotlib.patches.Rectangle([topQuad.leftb,topQuad.downb], topQuad.rightb - topQuad.leftb, topQuad.upb - topQuad.downb, angle=0.0,color='gray')
+            ax.add_patch(rect)
+            
+        else:
+            #continue down the list for each quad
+            plotQuadTreeSearchRegress(topQuad.childQuads[0],rectLb,rectRb,rectDb,rectUb,ax)
+            plotQuadTreeSearchRegress(topQuad.childQuads[1],rectLb,rectRb,rectDb,rectUb,ax)
+            plotQuadTreeSearchRegress(topQuad.childQuads[2],rectLb,rectRb,rectDb,rectUb,ax)
+            plotQuadTreeSearchRegress(topQuad.childQuads[3],rectLb,rectRb,rectDb,rectUb,ax)
+
+def plotQuadTreeSearch(topQuad,rectLb,rectRb,rectDb,rectUb):
+    fig,ax = plt.subplots(1)
+    plotQuadTreeSearchRegress(topQuad,rectLb,rectRb,rectDb,rectUb,ax)
+
+
 def getPointsOfQuadOverlap(topQuad,rectLb,rectRb,rectDb,rectUb):
     if topQuad.doesRectOverlap(rectLb,rectRb,rectDb,rectUb):
         if topQuad.isQuadEnclosed(rectLb,rectRb,rectDb,rectUb) or topQuad.childQuads[0]==None:
@@ -146,9 +166,9 @@ numParticles = 1000
 particles = []
 xlims = [0,60]
 ylims = [0,30]
-radius = 5
-centX = 20
-centY = 20
+radius = 10
+centX = 30
+centY = 15
 #------------------
 
 #set particle positions
@@ -164,6 +184,7 @@ def build_quad():
     return initialQuad
 
 t_build_quad = timeit.timeit(build_quad, number = 1)
+print(t_build_quad)
 
 initialQuad = build_quad()
 #----------
@@ -174,6 +195,7 @@ def search_quad():
     return encParticles
 
 t_search_quad = timeit.timeit(search_quad, number = 1)
+print(t_search_quad)
 
 encParticles = search_quad()
 #-----------
@@ -183,9 +205,15 @@ def search_brute():
     return getPtsCircBrute(particles,centX,centY,radius)
 
 t_search_brute = timeit.timeit(search_brute, number = 1)
+print(t_search_brute)
 #-------------
 
 #plot Quadtree Visual
+rectRb = centX + radius
+rectLb = centX - radius
+rectUb = centY + radius
+rectDb = centY - radius
+plotQuadTreeSearch(initialQuad,rectLb,rectRb,rectDb,rectUb)
 plt.plot([particleX.xpos for particleX in particles], [particleY.ypos for particleY in particles],'.')
 plotQuadTree(initialQuad)
 plt.gca().set_aspect('equal', 'box')
@@ -193,6 +221,7 @@ circ = plt.Circle((centX, centY), radius, color='g', fill=False)
 plt.gca().add_artist(circ)
 
 plt.plot([particleX.xpos for particleX in encParticles], [particleY.ypos for particleY in encParticles],'r.')
+plt.show()
 #--------------------
 
 
