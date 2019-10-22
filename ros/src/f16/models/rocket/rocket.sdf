@@ -10,7 +10,7 @@
         <pose>0 0 0 0 1.57 0</pose>
         <geometry>
           <mesh>
-            <uri>model://rocket/meshes/stl/body.stl</uri>
+            <uri>model://rocket/meshes/stl/Rocket_Painted.dae</uri>
           </mesh>
         </geometry>
       </collision>
@@ -18,7 +18,7 @@
         <pose>0 0 0 0 1.57 0</pose>
         <geometry>
           <mesh>
-            <uri>model://rocket/meshes/stl/body.stl</uri>
+            <uri>model://rocket/meshes/stl/Rocket_Painted.dae</uri>
           </mesh>
         </geometry>
         <material>
