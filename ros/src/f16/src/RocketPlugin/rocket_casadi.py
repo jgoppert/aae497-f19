@@ -25,6 +25,7 @@ def rocket_equations(jit=True):
     dt = ca.SX.sym('dt')
 
     # State: x
+    # body frame: Forward, Right, Down
     omega_b = x[0:3]  # inertial angular velocity expressed in body frame
     r_nb = x[3:7]  # modified rodrigues parameters
     v_b = x[7:10]  # inertial velocity expressed in body components
@@ -152,22 +153,19 @@ def rocket_equations(jit=True):
             val = ca.if_else(t > ti, yi, val)
         return val
 
+    # reference trajectory
+    pitch_d = 1.0
+
+    euler = so3.Euler.from_mrp(r_nb) # roll, pitch, yaw
+    pitch = euler[1]
+
     # control
     u_control = ca.SX.zeros(4)
     # these controls are just test controls to make sure the fins are working
     u_control[0] = 0.1  # mass flow rate
-    u_control[1] = schedule(t, 0, [ # aileron
-        (10, 0.1), (13, -0.1), (16, 0) # roll maneuver
-        ])
-    u_control[2] = schedule(t, 0, [ # elevator
-        (1, -0.1), (1.1, -0.2), (1.2, -0.3),  # initial fin deflection to go horizontal
-        (4.2, -0.2), (4.3, -0.1), (4.4, 0.0), (4.5, 0.1), (4.6, 0.2), # transition to horizontal flight
-        (9.0, 0.1), (9.1, 0.0)  # prepare for roll
-        ])
-    u_control[3] = schedule(t, 0, [ # rudder
-        (6, 0.1), (6.1, 0.2), (6.3, 0.3), (6.4, 0.4), (6.5, 0.5), # turn
-        (6.6, 0.4), (6.7, 0.3), (6.8, 0.2), (6.9, 0.1), (7.0, 0.0)
-        ])
+    u_control[1] = 0
+    u_control[2] = (pitch - 1)
+    u_control[3] = 0
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
 
@@ -417,7 +415,7 @@ def objective(s, vt, gamma, m_fuel, rhs, p):
 
 def trim(vt, gamma, m_fuel, rhs, p, s0=None):
     if s0 is None:
-        s0 = [100, 0, 0, 0, 0, 0]
+        s0 = [0.1, 0, 0, 0, 0, 0]
     s = ca.SX.sym('s', 6)
     nlp = {'x': s,
            'f': objective(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p),
@@ -457,11 +455,11 @@ def trim(vt, gamma, m_fuel, rhs, p, s0=None):
     }
 
 
-def do_trim():
+def do_trim(vt, gamma_deg, m_fuel):
     rocket = rocket_equations()
     x0, p0 = rocket['initialize'](90)
-    gamma_deg = 15
-    res = trim(vt=100, gamma=np.deg2rad(gamma_deg), m_fuel=0.8, rhs=rocket['rhs'], p=p0)
+    res = trim(vt=vt, gamma=np.deg2rad(gamma_deg),
+            m_fuel=m_fuel, rhs=rocket['rhs'], p=p0)
     s= res['s']
     x = res['x0']
     m_dot = s[0]
@@ -474,9 +472,14 @@ def do_trim():
 
     fmt_str = 'status:\t{:s}\nf:\t{:5.3f}\ng:\t{:s}\nm_dot:\t{:5.3f} kg/s\nalpha:\t{:5.3f} deg\nbeta:\t{:5.3f} deg\n' \
             'ail:\t{:5.3f} deg\nelv:\t{:5.3f} deg\nrdr:\t{:5.3f} deg\ntheta:\t{:5.3f} deg'
-    print(fmt_str.format(
-        res['status'], res['f'], str(res['g']),
-        m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
+    #print(fmt_str.format(
+    #    res['status'], res['f'], str(res['g']),
+    #    m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
+
+    # s: m_dot, alpha, beta, ail, elev, rdr
+    # u:  m_dot, aileron, elevator, rudder
+    u0 = [s[0], s[3], s[4], s[5]]
+    return x, u0, p0
     
 
 def run():
@@ -488,9 +491,47 @@ def run():
     plt.savefig('rocket.png')
     plt.show()
 
+def linearize():
+    eqs = rocket_equations()
+    x = eqs['x']
+    u = eqs['u']
+    p = eqs['p']
+    y = x  # state feedback
+    rhs = eqs['rhs']
+    xdot = rhs(x, u, p)
+    A = ca.jacobian(xdot, x)
+    B = ca.jacobian(xdot, u)
+    C = ca.jacobian(y, x)
+    D = ca.jacobian(y, u)
+    return ca.Function('ss', [x, u, p], [A, B, C, D],
+            ['x', 'u', 'p'], ['A', 'B', 'C', 'D'])
+
 
 if __name__ == "__main__":
-    # run()
-    # code_generation()
-    do_trim()
+    run()
+    code_generation()
+
+    x0, u0, p0 = do_trim(vt=100, gamma_deg=90, m_fuel=0.8)
+    lin = linearize()
+    import control
+    sys1 = control.ss(*lin(x0, u0, p0))
+
+    # get pitch rate from elevator
+    G = control.ss2tf(sys1[1, 2])
+    control.rlocus(G)
+    plt.show()
+
+    # next steps
+    # pitch rate pid design, use this to control pitch angle
+    # use flight path angle to control altitude
+
+    #print(x0, u0, p0)
+    #print(sys1)
+    # sys2 = do_trim(vt=50, gamma_deg=90, m_fuel=0.0)
+    
+    # pid design to get gains, manually for now using root locus
+
+    # schedule gains
+    # gains = gain_schedule(gains1, gains2, t)
+
 
