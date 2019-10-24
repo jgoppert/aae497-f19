@@ -2,7 +2,7 @@ import casadi as ca
 import numpy as np
 import sys
 
-sys.path.insert(0, '../../../../../python/pyecca')
+sys.path.insert(0, '../python/pyecca')
 
 import matplotlib.pyplot as plt
 import pyecca.lie.so3 as so3
@@ -195,34 +195,6 @@ def rocket_equations(jit=True):
     return rhs, x, u, p
 
 
-def controller():
-    trim_points = [
-    {'vt': 100, 'gamma_deg': 90, 'm_fuel': 0.8, 'color':'g', 'name':'1'},
-    {'vt': 100, 'gamma_deg': 45, 'm_fuel': 0.5, 'color':'b', 'name':'2'},
-    {'vt': 100, 'gamma_deg': 0, 'm_fuel': 0.2, 'color': 'c', 'name':'3'},
-    ]
-
-    s = control.tf([1, 0], [0, 1])
-
-    # One Controller to rule them all, One Controller to find them,
-    # One Controller to bring them all, and in the rocket bind them
-    H = 10*(s/100+1)*(s/100+1)/s  
-
-    Go_list = []
-    for trim_point in trim_points:
-
-        vt = trim_point['vt']
-        gamma_deg = trim_point['gamma_deg']
-        m_fuel = trim_point['m_fuel']
-
-        x0, u0, p0 = rocket_casadi.do_trim(vt=vt, gamma_deg=gamma_deg, m_fuel=m_fuel)
-        sys = control.ss(*rocket_casadi.linearize()(x0, u0, p0))
-
-        G = sys[1, 2]/s;
-        Go = control.minreal(G*H)
-        Go_list.append(Go)
-
-
 def analyze_data(data):
     plt.figure(figsize=(20, 20))
     plt.subplot(331)
@@ -335,9 +307,9 @@ def gazebo_equations():
     ])
 
     C_FLT_FRB = np.array([
-        #F   R   B
-        [1,  0,  0],  # F
-        [0, -1,  0],  # L
+        #F   R  B
+        [1,  0, 0],  # F
+        [0, -1, 0],  # L
         [0,  0, -1]   # T
     ])
     
@@ -380,6 +352,7 @@ def code_generation():
     gen = ca.CodeGenerator(
         'casadi_gen.c',
         {'main': False, 'mex': False, 'with_header': True, 'with_mem': True})
+
     gen.add(f_state)
     gen.add(f_force_moment)
     gen.add(f_control)
@@ -538,6 +511,16 @@ def linearize():
 if __name__ == "__main__":
     run()
     code_generation()
+
+    x0, u0, p0 = do_trim(vt=100, gamma_deg=90, m_fuel=0.8)
+    lin = linearize()
+    import control
+    sys1 = control.ss(*lin(x0, u0, p0))
+
+    # get pitch rate from elevator
+    G = control.ss2tf(sys1[1, 2])
+    control.rlocus(G)
+    plt.show()
 
     # next steps
     # pitch rate pid design, use this to control pitch angle

@@ -154,17 +154,29 @@ def rocket_equations(jit=True):
         return val
 
     # reference trajectory
-    pitch_d = 1.0
+    cg=code_generation()
+    if predict[2] < 60:
+      xc={0,0,0,0,0,0,0,0}
+      uc=0
+      dontmatter, y= cg['controller1'](xc,uc)
+    elif predict[2]  < 90:
+      xc={0,0,0,0,0,0,0,0}
+      uc=0
+      dontmatter, y= cg['controller2'](xc,uc)
+    else:
+      xc={0,0,0,0,0}
+      uc=0
+      dontmatter, y= cg['controller3'](xc,uc)
 
     euler = so3.Euler.from_mrp(r_nb) # roll, pitch, yaw
-    pitch = euler[1]
+    # pitch = euler[1]
 
     # control
     u_control = ca.SX.zeros(4)
     # these controls are just test controls to make sure the fins are working
     u_control[0] = 0.1  # mass flow rate
     u_control[1] = 0
-    u_control[2] = (pitch - 1)
+    u_control[2] = y
     u_control[3] = 0
     control = ca.Function('control', [x, p, t, dt], [u_control],
         ['x', 'p', 't', 'dt'], ['u'])
@@ -193,34 +205,6 @@ def rocket_equations(jit=True):
         'p': p
     }
     return rhs, x, u, p
-
-
-def controller():
-    trim_points = [
-    {'vt': 100, 'gamma_deg': 90, 'm_fuel': 0.8, 'color':'g', 'name':'1'},
-    {'vt': 100, 'gamma_deg': 45, 'm_fuel': 0.5, 'color':'b', 'name':'2'},
-    {'vt': 100, 'gamma_deg': 0, 'm_fuel': 0.2, 'color': 'c', 'name':'3'},
-    ]
-
-    s = control.tf([1, 0], [0, 1])
-
-    # One Controller to rule them all, One Controller to find them,
-    # One Controller to bring them all, and in the rocket bind them
-    H = 10*(s/100+1)*(s/100+1)/s  
-
-    Go_list = []
-    for trim_point in trim_points:
-
-        vt = trim_point['vt']
-        gamma_deg = trim_point['gamma_deg']
-        m_fuel = trim_point['m_fuel']
-
-        x0, u0, p0 = rocket_casadi.do_trim(vt=vt, gamma_deg=gamma_deg, m_fuel=m_fuel)
-        sys = control.ss(*rocket_casadi.linearize()(x0, u0, p0))
-
-        G = sys[1, 2]/s;
-        Go = control.minreal(G*H)
-        Go_list.append(Go)
 
 
 def analyze_data(data):
@@ -291,6 +275,14 @@ def analyze_data(data):
     plt.legend()
     plt.grid()
 
+    plt.subplot(338)
+    #plt.title('control input')
+    plt.plot(data['t'], -data['x'][:, 12], label='mdot')
+    plt.xlabel('t, sec')
+    plt.ylabel('altitude')
+    plt.legend()
+    plt.grid()   
+
 
 def simulate(rocket, x0, p0, dt=0.005, t0=0, tf=5):
     """
@@ -335,9 +327,9 @@ def gazebo_equations():
     ])
 
     C_FLT_FRB = np.array([
-        #F   R   B
-        [1,  0,  0],  # F
-        [0, -1,  0],  # L
+        #F   R  B
+        [1,  0, 0],  # F
+        [0, -1, 0],  # L
         [0,  0, -1]   # T
     ])
     
@@ -380,14 +372,79 @@ def code_generation():
     gen = ca.CodeGenerator(
         'casadi_gen.c',
         {'main': False, 'mex': False, 'with_header': True, 'with_mem': True})
+
+    x0, u0, p0 = do_trim(vt=100, gamma_deg=60, m_fuel=0.8, z=60)
+    x1, u1, p1 = do_trim(vt=100, gamma_deg=75, m_fuel=0.6, z=90)
+    x2, u2, p2 = do_trim(vt=100, gamma_deg=90, m_fuel=0.3, z=100)
+    # x3, u3, p3 = do_trim(vt=100, gamma_deg=85, m_fuel=0, z=100)
+
+    lin = linearize()
+    import control
+    sys1 = control.ss(*lin(x0, u0, p0))
+    sys2 = control.ss(*lin(x1, u1, p1))
+    sys3 = control.ss(*lin(x2, u2, p2))
+    # sys4 = control.ss(*lin(x3, u3, p3))
+
+    G1 = control.ss2tf(sys1[1, 2])
+    G2 = control.ss2tf(sys2[1, 2])
+    G3 = control.ss2tf(sys3[1, 2])
+    # G4 = control.ss2tf(sys4[1, 2])
+
+    G1 = control.c2d(G1, .01)
+    G2 = control.c2d(G2, .01)
+    G3 = control.c2d(G3, .01)
+    # G4 = control.c2d(G4, .01)
+
+    s=control.tf([1,0], [0,1])
+    Hd1 = (20 + 3/s)
+    Hd2 = (20 + 3/s)
+    Hd3 = (20 + 3/s)
+
+    G1 = control.minreal(G1*Hd1)
+    G2 = control.minreal(G2*Hd2)
+    G3 = control.minreal(G3*Hd3)
+
+    G1 = control.tf2ss(G1)
+    G2 = control.tf2ss(G2)
+    G3 = control.tf2ss(G3)
+
+    # G4 = control.minreal(G4)
+
+    #print (G3)
+
+    x0 = ca.SX.sym('x0',8)
+    u = ca.SX.sym('u',1)
+
+    x = ca.mtimes(G1.A,x0) + ca.mtimes(G1.B,u)
+    y = ca.mtimes(G1.C,x0) + ca.mtimes(G1.D,u)
+    controller1=ca.Function('controller1',[x0,u],[x,y])
+
+    x = ca.mtimes(G2.A,x0) + ca.mtimes(G2.B,u)
+    y = ca.mtimes(G2.C,x0) + ca.mtimes(G2.D,u)
+    controller2=ca.Function('controller2',[x0,u],[x,y])
+
+    x0 = ca.SX.sym('x',4)
+
+    x = ca.mtimes(G3.A,x0) + ca.mtimes(G3.B,u)
+    y = ca.mtimes(G3.C,x0) + ca.mtimes(G3.D,u)
+    controller3=ca.Function('controller3',[x0,u],[x,y])
+    gen.add(controller1)
+    gen.add(controller2)
+    gen.add(controller3)
     gen.add(f_state)
     gen.add(f_force_moment)
     gen.add(f_control)
     gen.add(f_u_to_fin)
-    gen.generate()
+    #gen.generate()
+
+    return {
+        'controller1': controller1,
+        'controller2': controller2,
+        'controller3': controller3
+    }
 
 
-def constrain(s, vt, gamma, m_fuel):
+def constrain(s, vt, gamma, m_fuel, z):
     # s is our design vector:
     m_dot = s[0]
     alpha = s[1]
@@ -405,7 +462,7 @@ def constrain(s, vt, gamma, m_fuel):
     omega_b = ca.vertcat(0, 0, 0)
     r_nb = so3.Mrp.from_euler(ca.vertcat(phi, theta, psi))
 
-    p_n = ca.vertcat(0, 0, 0)
+    p_n = ca.vertcat(0, 0, z)
 
     # vt, alpha, theta, q, h, pos
     x = ca.vertcat(omega_b, r_nb, v_b, p_n, m_fuel)
@@ -414,8 +471,8 @@ def constrain(s, vt, gamma, m_fuel):
     u = ca.vertcat(m_dot, ail, elev, rdr)
     return x, u
 
-def constraint(s, vt, gamma, m_fuel, rhs, p):
-    x, u = constrain(s, vt, gamma, m_fuel)
+def constraint(s, vt, gamma, m_fuel, rhs, p, z):
+    x, u = constrain(s, vt, gamma, m_fuel, z)
     x_dot = rhs(x, u, p)
 
     # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
@@ -429,8 +486,8 @@ def constraint(s, vt, gamma, m_fuel, rhs, p):
         x_dot[2],
         )
 
-def objective(s, vt, gamma, m_fuel, rhs, p):
-    x, u = constrain(s, vt, gamma, m_fuel)
+def objective(s, vt, gamma, m_fuel, rhs, p, z):
+    x, u = constrain(s, vt, gamma, m_fuel, z)
     x_dot = rhs(x, u, p)
 
     # omega_b = x[0:3]  # inertial angular velocity expressed in body frame
@@ -441,13 +498,13 @@ def objective(s, vt, gamma, m_fuel, rhs, p):
     return x_dot[7]**2 + x_dot[8]**2 + x_dot[9]**2
 
 
-def trim(vt, gamma, m_fuel, rhs, p, s0=None):
+def trim(vt, gamma, m_fuel, z, rhs, p, s0=None):
     if s0 is None:
-        s0 = [0.1, 0, 0, 0, 0, 0]
+        s0 = [0.1, -np.deg2rad(45), 0, 0, 0, 0]
     s = ca.SX.sym('s', 6)
     nlp = {'x': s,
-           'f': objective(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p),
-            'g': constraint(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p)}
+           'f': objective(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p, z=z),
+            'g': constraint(s, vt=vt, gamma=gamma, m_fuel=m_fuel, rhs=rhs, p=p, z=z)}
     S = ca.nlpsol('S', 'ipopt', nlp, {
         'print_time': 0,
         'ipopt': {
@@ -472,7 +529,7 @@ def trim(vt, gamma, m_fuel, rhs, p, s0=None):
     if not stats['success']:
         raise ValueError('Trim failed to converge', stats['return_status'], res)
     s_opt = res['x']
-    x0, u0 = constrain(s_opt, vt, gamma, m_fuel)
+    x0, u0 = constrain(s_opt, vt, gamma, m_fuel,z)
     return {
         'x0': np.array(ca.DM(x0)).reshape(-1),
         'u0': np.array(ca.DM(u0)).reshape(-1),
@@ -483,11 +540,11 @@ def trim(vt, gamma, m_fuel, rhs, p, s0=None):
     }
 
 
-def do_trim(vt, gamma_deg, m_fuel):
+def do_trim(vt, gamma_deg, m_fuel, z):
     rocket = rocket_equations()
-    x0, p0 = rocket['initialize'](90)
+    x0, p0 = rocket['initialize'](45)
     res = trim(vt=vt, gamma=np.deg2rad(gamma_deg),
-            m_fuel=m_fuel, rhs=rocket['rhs'], p=p0)
+            m_fuel=m_fuel, z=z, rhs=rocket['rhs'], p=p0)
     s= res['s']
     x = res['x0']
     m_dot = s[0]
@@ -500,9 +557,9 @@ def do_trim(vt, gamma_deg, m_fuel):
 
     fmt_str = 'status:\t{:s}\nf:\t{:5.3f}\ng:\t{:s}\nm_dot:\t{:5.3f} kg/s\nalpha:\t{:5.3f} deg\nbeta:\t{:5.3f} deg\n' \
             'ail:\t{:5.3f} deg\nelv:\t{:5.3f} deg\nrdr:\t{:5.3f} deg\ntheta:\t{:5.3f} deg'
-    #print(fmt_str.format(
-    #    res['status'], res['f'], str(res['g']),
-    #    m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
+    print(fmt_str.format(
+        res['status'], res['f'], str(res['g']),
+        m_dot, alpha_deg, beta_deg, ail_deg, elv_deg, rdr_deg, theta_deg))
 
     # s: m_dot, alpha, beta, ail, elev, rdr
     # u:  m_dot, aileron, elevator, rudder
@@ -535,9 +592,42 @@ def linearize():
             ['x', 'u', 'p'], ['A', 'B', 'C', 'D'])
 
 
+
+
+
 if __name__ == "__main__":
-    run()
+    # run()
     code_generation()
+    #Controller()
+
+    
+    # get pitch rate from elevator
+
+    # if (0 <= z < 60):
+    #     Gr = (2.28 + 0.7/s + 1*s)*G1
+    # elif 60 <= z < 90:
+    #     Gr = (2.28 + 0.7/s + 1*s)*G2
+    # elif (90 <= z < 100) & (m_fuel!=0):
+    #     Gr = (2.28 + 0.7/s + 1*s)*G3
+    # else:
+    #     Gr = (2.28 + 0.7/s + 1*s)*G4
+
+    # G = Gr
+    # control.rlocus(G)
+    # plt.show()
+
+    # G2 = control.ss2tf(sys2[1, 2])
+    # control.rlocus(G2)
+    # plt.show()
+    
+    # G3 = control.ss2tf(sys3[1, 2])
+    # control.rlocus(G)
+    # plt.show()
+    
+    # G4 = control.ss2tf(sys4[1, 2])
+    # control.rlocus(G)
+    # plt.show()
+
 
     # next steps
     # pitch rate pid design, use this to control pitch angle
@@ -550,4 +640,6 @@ if __name__ == "__main__":
     # pid design to get gains, manually for now using root locus
 
     # schedule gains
-    # gains = gain_schedule(gains1, gains2, t)
+    # gains = gain_schedule(gains1, gains2, gain3, gain4, t)
+
+
