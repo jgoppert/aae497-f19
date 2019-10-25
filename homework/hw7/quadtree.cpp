@@ -56,7 +56,10 @@ public:
     {
         double tol = 1e-5;
         return (
-            (p.x > (m_center.x - m_size - tol)) && (p.x < (m_center.x + m_size + tol)) && (p.y > (m_center.y - m_size - tol)) && (p.y < (m_center.y + m_size + tol)));
+            (p.x > (m_center.x - m_size - tol))
+            && (p.x < (m_center.x + m_size + tol))
+            && (p.y > (m_center.y - m_size - tol))
+            && (p.y < (m_center.y + m_size + tol)));
     }
     /**
      * Allows landmark insertion into QuadTree
@@ -77,6 +80,7 @@ public:
         if (m_size < m_resolution)
         {
             m_landmarks.push_back(lm);
+            //std::cout << "resolution reached, adding landmark: " << m_landmarks.size() << std::endl;
         }
         else
         {
@@ -117,7 +121,7 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-        /* write your code here */
+		// just fill in your logic here
         return close_landmarks;
     }
 
@@ -144,17 +148,13 @@ int main(int argc, char const *argv[])
 {
     srand(1234); // seed random number generator
 
-    Position center{0, 0};  // center of space
-    /* Position is "struct."
-    A struct is a public class (convenient was of declaring it)
-    center is instance,
-    initialization is 0, 0.
-    */
-    double size = 1000;     // size of space
-    double resolution = 1;  // smallest cell in quadtree
-    int n_landmarks = 1000; // number of landmarks
+    Position center{0, 0}; // center of space
+    double size = 1000;       // size of space
+    double resolution = 1; // smallest cell in quadtree
+    int n_landmarks = 1000;  // number of landmarks
     QuadTree tree(center, size, resolution);
     double search_radius = 50.0; // radius we want to find landmarks within
+    std::cout << "size: " << size << " resolution: " << resolution << " n_landmarks: " << n_landmarks <<  std::endl;
 
     // create random landmarks
     std::list<Landmark> landmarks;
@@ -210,18 +210,18 @@ int main(int argc, char const *argv[])
     std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
     // quadtree search
-    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
     std::cout << "quadtree searching";
     start = std::chrono::high_resolution_clock::now();
-    for (auto &lm : close_landmarks_quadtree)
-    {
-        std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
-    }
+    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
     double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                          std::chrono::high_resolution_clock::now() - start)
                                          .count();
     std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
+    for (auto &lm : close_landmarks_quadtree)
+    {
+        std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
+    }
 
-    /* code */
+    std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;
     return 0;
 }
