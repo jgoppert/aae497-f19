@@ -145,6 +145,11 @@ int main(int argc, char const *argv[])
     srand(1234); // seed random number generator
 
     Position center{0, 0};  // center of space
+    /* Position is "struct."
+    A struct is a public class (convenient was of declaring it)
+    center is instance,
+    initialization is 0, 0.
+    */
     double size = 1000;     // size of space
     double resolution = 1;  // smallest cell in quadtree
     int n_landmarks = 1000; // number of landmarks
