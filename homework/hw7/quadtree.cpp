@@ -14,6 +14,15 @@ struct Position
     double x, y;
 };
 
+/*
+A struct is a public class. By default, a class is private. This means we cannot call private methods from outside the class.
+i.e. by using struct, we can create an instance of pos (double x, y) anywhere in our code.
+
+We create an instance of a class with a space. "Position pos" creates an instance of position.
+landmark l;
+l.pos.x is the x coordinate of the position of the landmark.
+l.id is the id (an integer) of the landmark.
+*/
 struct Landmark
 {
     Position pos;
@@ -122,6 +131,19 @@ public:
     {
         std::list<Landmark> close_landmarks;
 		// just fill in your logic here
+        double dx = position.x - m_center.x;
+        double dy = position.y - m_center.y;
+        double hyp = sqrt(dx*dx + dy*dy);
+        bool overlap = hyp < (radius + sqrt(2)*m_size);
+        if(!overlap) return close_landmarks;
+        
+        if(m_landmarks.size() > 0) return std::list<Landmark>(m_landmarks);
+
+        // Check subquadrants
+        if(m_NE.get()) close_landmarks.splice(close_landmarks.end(), m_NE->search(position, radius));
+        if(m_NW.get()) close_landmarks.splice(close_landmarks.end(), m_NW->search(position, radius));
+        if(m_SW.get()) close_landmarks.splice(close_landmarks.end(), m_SW->search(position, radius));
+        if(m_SE.get()) close_landmarks.splice(close_landmarks.end(), m_SE->search(position, radius));
         return close_landmarks;
     }
 
@@ -150,13 +172,20 @@ int main(int argc, char const *argv[])
 
     Position center{0, 0}; // center of space
     double size = 1000;       // size of space
-    double resolution = 1; // smallest cell in quadtree
+    double resolution = 256; // smallest cell in quadtree
     int n_landmarks = 1000;  // number of landmarks
     QuadTree tree(center, size, resolution);
     double search_radius = 50.0; // radius we want to find landmarks within
     std::cout << "size: " << size << " resolution: " << resolution << " n_landmarks: " << n_landmarks <<  std::endl;
 
     // create random landmarks
+    /*
+std is a "namespace." This means a bunch of classes we can use are defined, including list.
+Thus we can use the name "list" without overwriting "list" as defined in std.
+<> are used to define template parameters. i.e. within the list template class, we must specify what type it is.
+We are telling the compiler to define what a list of landmarks is using the list class.
+We create an instance of the list of landmarks class called landmarks.
+    */
     std::list<Landmark> landmarks;
     for (int id = 0; id < n_landmarks; id++)
     {
