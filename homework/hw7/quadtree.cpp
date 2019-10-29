@@ -80,7 +80,6 @@ public:
         if (m_size < m_resolution)
         {
             m_landmarks.push_back(lm);
-            //std::cout << "resolution reached, adding landmark: " << m_landmarks.size() << std::endl;
         }
         else
         {
