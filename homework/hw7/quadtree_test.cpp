@@ -1,6 +1,7 @@
 // import relevant libraries
 #include <memory>
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <sstream>
 #include <exception>
@@ -22,6 +23,16 @@ struct Landmark
 
 class QuadTree
 {
+//     enum CornerType {CORNER_TL, CORNER_TR, CORNER_BL, CORNER_BR};
+// private:
+//     QuadTree* m_pChild[4]; // 자식노드 정의
+//     float m_nCenter;
+//     float m_nCorner[4];
+
+// private:
+//     QuadTree* _AddChild(float nCornerTL, int nCornerTR, int nCornerBL, int nCornerBR);
+
+
 public:
     QuadTree() = delete;
     virtual ~QuadTree()
@@ -50,7 +61,7 @@ public:
         }
     }
     /**
-     * This function is is just used to check if a point is actuall contained in the tree
+     * This function is just used to check if a point is actually contained in the tree
      **/
     bool contains(const Position &p)
     {
@@ -77,7 +88,7 @@ public:
               << std::endl;
             throw std::runtime_error(s.str());
         }
-        if (m_size < m_resolution)
+        if (m_size < m_resolution)  // break 문
         {
             m_landmarks.push_back(lm);
             //std::cout << "resolution reached, adding landmark: " << m_landmarks.size() << std::endl;
@@ -121,16 +132,49 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-		// just fill in your logic here
+        std::list<Landmark> empty_land;
+
+        float dx = position.x - m_center.x;
+        float dy = position.y - m_center.y;
+        float d = sqrt(dx*dx + dy*dy);
+        bool sub_check = d < (radius + (2*m_size)/sqrt(2));
+
+        if (m_size <= m_resolution)
+        {
+            for (auto i:m_landmarks)
+            {
+                close_landmarks.push_back(i);
+            }
+            return close_landmarks;
+        }
+        
+
+        if (sub_check && m_NW.get())
+        {
+            close_landmarks.splice(close_landmarks.begin(),m_NW->search(position, radius));
+        }
+        if (sub_check && m_NE.get())
+        {
+            close_landmarks.splice(close_landmarks.begin(),m_NE->search(position, radius));
+        }
+        if (sub_check && m_SE.get())
+        {
+            close_landmarks.splice(close_landmarks.begin(),m_SE->search(position, radius));
+        }
+        if (sub_check && m_SW.get())
+        {
+            close_landmarks.splice(close_landmarks.begin(),m_SW->search(position, radius));
+        }
+
         return close_landmarks;
     }
 
 private:
     void subInsert(std::shared_ptr<QuadTree> &tree, const Landmark &lm, const Position &pos)
     {
-        if (!tree.get())
+        if (!tree.get()) // 쿼드트리내에 랜드마크가 없을경우
         {
-            tree = std::make_shared<QuadTree>(pos, m_size / 2, m_depth + 1);
+            tree = std::make_shared<QuadTree>(pos, m_size / 2, m_depth + 1);  //새로운 쿼드트리 형성
         }
         tree->insert(lm);
     }
@@ -144,6 +188,8 @@ private:
     bool m_verbose{false};
 };
 
+
+
 int main(int argc, char const *argv[])
 {
     srand(1234); // seed random number generator
@@ -152,7 +198,7 @@ int main(int argc, char const *argv[])
     double size = 1000;       // size of space
     double resolution = 1; // smallest cell in quadtree
     int n_landmarks = 1000;  // number of landmarks
-    QuadTree tree(center, size, resolution);
+    QuadTree tree(center, size, resolution); // Defining quadtree object
     double search_radius = 50.0; // radius we want to find landmarks within
     std::cout << "size: " << size << " resolution: " << resolution << " n_landmarks: " << n_landmarks <<  std::endl;
 
@@ -161,16 +207,16 @@ int main(int argc, char const *argv[])
     for (int id = 0; id < n_landmarks; id++)
     {
         float x = size * 2 * (double(rand()) / RAND_MAX - 0.5);
-        float y = size * 2 * (double(rand()) / RAND_MAX - 0.5);
+        float y = size * 2 * (double(rand()) / RAND_MAX - 0.5);  //creating random -1000 to 1000 for x and y
         //std::cout << "inserting landmark id: " << id << " x: " << x << " y: " << y << std::endl;
-        landmarks.push_back(Landmark{x, y, id});
+        landmarks.push_back(Landmark{x, y, id}); // landmark struct insertion(푸시백) (x,y,id)
     }
     std::cout << "created " << landmarks.size() << " landmarks" << std::endl;
 
     // where you are
     float x = size * 2 * (double(rand()) / RAND_MAX - 0.5);
-    float y = size * 2 * (double(rand()) / RAND_MAX - 0.5);
-    Position vehicle_position{x, y};
+    float y = size * 2 * (double(rand()) / RAND_MAX - 0.5); // x,y 위치 랜덤지정
+    Position vehicle_position{x, y}; // x,y 로 vehicle position struct 지정
     std::cout << "searcing at x: " << x << " y: " << y << " radius: " << search_radius << std::endl;
 
     // brute force search
@@ -179,11 +225,11 @@ int main(int argc, char const *argv[])
     for (auto &lm : landmarks)
     {
         float dx = vehicle_position.x - lm.pos.x;
-        float dy = vehicle_position.y - lm.pos.y;
-        float d = sqrt(dx * dx + dy * dy);
-        if (d < search_radius)
+        float dy = vehicle_position.y - lm.pos.y; // landmark 와 vehicle position 의 x,y 거리차이
+        float d = sqrt(dx * dx + dy * dy); // 거리 계산
+        if (d < search_radius) // 거리가 search 반경보다 작을경우..
         {
-            close_landmarks_brute_force.push_back(lm);
+            close_landmarks_brute_force.push_back(lm); // landmark position 데이터 삽입
         }
     }
     double elapsed_brute_force_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -197,6 +243,9 @@ int main(int argc, char const *argv[])
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
 
+ 
+/* Quadtree landmark insertion and searching */
+
     // insert random landmarks into quadtree
     std::cout << "quadtree inserting landmarks";
     start = std::chrono::high_resolution_clock::now();
@@ -209,19 +258,31 @@ int main(int argc, char const *argv[])
                                          .count();
     std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
-    // quadtree search
+
+    // quadtree searching method
     std::cout << "quadtree searching";
     start = std::chrono::high_resolution_clock::now();
-    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
+    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius); // 서칭 메소드 콜 (x,y,id 반환)
     double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                          std::chrono::high_resolution_clock::now() - start)
                                          .count();
     std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
-    for (auto &lm : close_landmarks_quadtree)
-    {
+
+
+
+    for (auto &lm : close_landmarks_quadtree) //lm 을 메소드 리턴 value 에 어드레스 패싱
+        {
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
 
     std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;
+
+
+    // data export
+    std::ofstream myfile;
+    myfile.open("myname.txt");
+    myfile << elapsed_quadtree_search << std::endl;
+    myfile.close();
+
     return 0;
 }
