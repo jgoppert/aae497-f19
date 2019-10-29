@@ -121,8 +121,42 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-		// just fill in your logic here
+        //If search area overlaps quad being checked
+        if(overlap(position,radius))
+        {
+            //Check for each child if it's been created. If so, search inside the child quad as well
+            if(m_NE) close_landmarks.splice(close_landmarks.end(),m_NE->search(position,radius));
+            if(m_NW) close_landmarks.splice(close_landmarks.end(),m_NW->search(position,radius));
+            if(m_SW) close_landmarks.splice(close_landmarks.end(),m_SW->search(position,radius));
+            if(m_SE) close_landmarks.splice(close_landmarks.end(),m_SE->search(position,radius));
+            //If there's no more children then look at the points in this root
+            if(!(m_NE||m_NW||m_SW||m_SE))
+            {
+                //Check each landmark to see if it is inside the search area. If so, add to close_landmarks
+                for (auto &lm : m_landmarks)
+                {
+                    double dx = position.x - lm.pos.x;
+                    double dy = position.y - lm.pos.y;
+                    double d = sqrt(dx * dx + dy * dy);
+                    if (d < radius)
+                    {
+                        close_landmarks.push_back(lm);
+                    }
+                }
+                //close_landmarks.splice(close_landmarks.end(),m_landmarks);
+            }
+        }
         return close_landmarks;
+    }
+
+    bool overlap(const Position &position, double radius)
+    {
+        double  quadRadius  = sqrt(2)*m_size;
+        double  dx          = (position.x-m_center.x);
+        double  dy          = (position.y-m_center.y);
+        double  dist        = sqrt(dx*dx+dy*dy);  
+        bool    isOverlap   = (quadRadius+radius)>dist;
+        return isOverlap; //implement
     }
 
 private:
