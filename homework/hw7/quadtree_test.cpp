@@ -196,7 +196,7 @@ int main(int argc, char const *argv[])
 
     Position center{0, 0}; // center of space
     double size = 1000;       // size of space
-    double resolution = 0.01; // smallest cell in quadtree
+    double resolution = 1; // smallest cell in quadtree
     int n_landmarks = 1000;  // number of landmarks
     QuadTree tree(center, size, resolution); // Defining quadtree object
     double search_radius = 50.0; // radius we want to find landmarks within
