@@ -1,0 +1,11 @@
+{
+ "argv": [
+  "/home/wlevin/aae497-f19/aae497-f19/bin/python",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "Python 3",
+ "language": "python"
+}

@@ -1,0 +1,267 @@
+{
+  "build": "py_0",
+  "build_number": 0,
+  "channel": "https://conda.anaconda.org/conda-forge/noarch",
+  "constrains": [],
+  "depends": [
+    "python"
+  ],
+  "extracted_package_dir": "/home/wlevin/anaconda3/pkgs/json5-0.8.5-py_0",
+  "features": "",
+  "files": [
+    "lib/python3.7/site-packages/README.md",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/INSTALLER",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/METADATA",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/RECORD",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/WHEEL",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/entry_points.txt",
+    "lib/python3.7/site-packages/json5-0.8.5.dist-info/top_level.txt",
+    "lib/python3.7/site-packages/json5/__init__.py",
+    "lib/python3.7/site-packages/json5/__main__.py",
+    "lib/python3.7/site-packages/json5/arg_parser.py",
+    "lib/python3.7/site-packages/json5/host.py",
+    "lib/python3.7/site-packages/json5/lib.py",
+    "lib/python3.7/site-packages/json5/parser.py",
+    "lib/python3.7/site-packages/json5/tool.py",
+    "lib/python3.7/site-packages/json5/version.py",
+    "lib/python3.7/site-packages/tests/__init__.py",
+    "lib/python3.7/site-packages/tests/host_fake.py",
+    "lib/python3.7/site-packages/tests/host_test.py",
+    "lib/python3.7/site-packages/tests/lib_test.py",
+    "lib/python3.7/site-packages/tests/tool_test.py",
+    "bin/pyjson5",
+    "lib/python3.7/site-packages/json5/__pycache__/__init__.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/__main__.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/arg_parser.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/host.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/lib.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/parser.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/tool.cpython-37.pyc",
+    "lib/python3.7/site-packages/json5/__pycache__/version.cpython-37.pyc",
+    "lib/python3.7/site-packages/tests/__pycache__/__init__.cpython-37.pyc",
+    "lib/python3.7/site-packages/tests/__pycache__/host_fake.cpython-37.pyc",
+    "lib/python3.7/site-packages/tests/__pycache__/host_test.cpython-37.pyc",
+    "lib/python3.7/site-packages/tests/__pycache__/lib_test.cpython-37.pyc",
+    "lib/python3.7/site-packages/tests/__pycache__/tool_test.cpython-37.pyc"
+  ],
+  "fn": "json5-0.8.5-py_0.tar.bz2",
+  "license": "Apache-2.0",
+  "license_family": "Apache",
+  "link": {
+    "source": "/home/wlevin/anaconda3/pkgs/json5-0.8.5-py_0",
+    "type": 1
+  },
+  "md5": "4a793bd58be05fb56ffb3e4f4a71cc98",
+  "name": "json5",
+  "noarch": "python",
+  "package_tarball_full_path": "/home/wlevin/anaconda3/pkgs/json5-0.8.5-py_0.tar.bz2",
+  "package_type": "noarch_python",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "site-packages/README.md",
+        "path_type": "hardlink",
+        "sha256": "43aeca60d0725fcea029a18c3105af5b0d0c18b026dd62c67f865836ad4a8024",
+        "sha256_in_prefix": "43aeca60d0725fcea029a18c3105af5b0d0c18b026dd62c67f865836ad4a8024",
+        "size_in_bytes": 4744
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/INSTALLER",
+        "path_type": "hardlink",
+        "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508",
+        "sha256_in_prefix": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508",
+        "size_in_bytes": 4
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/METADATA",
+        "path_type": "hardlink",
+        "sha256": "47f839096a5282cf03dafc2cafcf9a966b46a49ebc189f2f4085dbd24c852d98",
+        "sha256_in_prefix": "47f839096a5282cf03dafc2cafcf9a966b46a49ebc189f2f4085dbd24c852d98",
+        "size_in_bytes": 5376
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/RECORD",
+        "path_type": "hardlink",
+        "sha256": "ed01f1ef9fd0eb3e44bdfd44f6551657cba69cc00681246b3d33e3f524a0d118",
+        "sha256_in_prefix": "ed01f1ef9fd0eb3e44bdfd44f6551657cba69cc00681246b3d33e3f524a0d118",
+        "size_in_bytes": 1855
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/WHEEL",
+        "path_type": "hardlink",
+        "sha256": "87f6959f9381d8811152331b8b6a6e72647fcf3589b64df4dd85ef861eb4349f",
+        "sha256_in_prefix": "87f6959f9381d8811152331b8b6a6e72647fcf3589b64df4dd85ef861eb4349f",
+        "size_in_bytes": 110
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/entry_points.txt",
+        "path_type": "hardlink",
+        "sha256": "73c5985d53d580bcfa1888d5bbe7788fd182793268c914a6b5d701e23bfcfa9b",
+        "sha256_in_prefix": "73c5985d53d580bcfa1888d5bbe7788fd182793268c914a6b5d701e23bfcfa9b",
+        "size_in_bytes": 45
+      },
+      {
+        "_path": "site-packages/json5-0.8.5.dist-info/top_level.txt",
+        "path_type": "hardlink",
+        "sha256": "7ce46565b5b19b667bbcc4ab6e1168740b547cabeeba4254412cb93a9ead8f0f",
+        "sha256_in_prefix": "7ce46565b5b19b667bbcc4ab6e1168740b547cabeeba4254412cb93a9ead8f0f",
+        "size_in_bytes": 12
+      },
+      {
+        "_path": "site-packages/json5/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "417e4532917217d19110c6381aed0b31a883cba80d058df0ab6bb0fc17fa49d0",
+        "sha256_in_prefix": "417e4532917217d19110c6381aed0b31a883cba80d058df0ab6bb0fc17fa49d0",
+        "size_in_bytes": 821
+      },
+      {
+        "_path": "site-packages/json5/__main__.py",
+        "path_type": "hardlink",
+        "sha256": "3ef39ff8f9c281315c4a93f909ae425a689aa6251317c16fd0effd36aeaca8a1",
+        "sha256_in_prefix": "3ef39ff8f9c281315c4a93f909ae425a689aa6251317c16fd0effd36aeaca8a1",
+        "size_in_bytes": 741
+      },
+      {
+        "_path": "site-packages/json5/arg_parser.py",
+        "path_type": "hardlink",
+        "sha256": "d5312510552e719f26778dbe7740dbf3c1d52d4065bd62dd62d3446b773502b0",
+        "sha256_in_prefix": "d5312510552e719f26778dbe7740dbf3c1d52d4065bd62dd62d3446b773502b0",
+        "size_in_bytes": 2130
+      },
+      {
+        "_path": "site-packages/json5/host.py",
+        "path_type": "hardlink",
+        "sha256": "7db8d7b739235e1d111025e0529dc8314e3695589b14488ca03066eb1c60b034",
+        "sha256_in_prefix": "7db8d7b739235e1d111025e0529dc8314e3695589b14488ca03066eb1c60b034",
+        "size_in_bytes": 1635
+      },
+      {
+        "_path": "site-packages/json5/lib.py",
+        "path_type": "hardlink",
+        "sha256": "f7888b0100e79e9d386a7e963a0f2ca1fd23a44c3ae0b693e94e8a3a53950286",
+        "sha256_in_prefix": "f7888b0100e79e9d386a7e963a0f2ca1fd23a44c3ae0b693e94e8a3a53950286",
+        "size_in_bytes": 13516
+      },
+      {
+        "_path": "site-packages/json5/parser.py",
+        "path_type": "hardlink",
+        "sha256": "edb17ba768681fec1a9591fa5fa527171b815bf6b4754d905d715c06249fc678",
+        "sha256_in_prefix": "edb17ba768681fec1a9591fa5fa527171b815bf6b4754d905d715c06249fc678",
+        "size_in_bytes": 29427
+      },
+      {
+        "_path": "site-packages/json5/tool.py",
+        "path_type": "hardlink",
+        "sha256": "13b795359550e2513e2f63f3aca1d3741b9b54b23ac8d3a4ba75f2ca80843ab2",
+        "sha256_in_prefix": "13b795359550e2513e2f63f3aca1d3741b9b54b23ac8d3a4ba75f2ca80843ab2",
+        "size_in_bytes": 3690
+      },
+      {
+        "_path": "site-packages/json5/version.py",
+        "path_type": "hardlink",
+        "sha256": "bda9d4fa36442716de7578262b42103d0ee6e75c90cd2ca02556e2cf959a6b57",
+        "sha256_in_prefix": "bda9d4fa36442716de7578262b42103d0ee6e75c90cd2ca02556e2cf959a6b57",
+        "size_in_bytes": 614
+      },
+      {
+        "_path": "site-packages/tests/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/tests/host_fake.py",
+        "path_type": "hardlink",
+        "sha256": "e67a6147085db4f21430d89d0bbc80a3b411103b701d5f023c430837861b575b",
+        "sha256_in_prefix": "e67a6147085db4f21430d89d0bbc80a3b411103b701d5f023c430837861b575b",
+        "size_in_bytes": 3805
+      },
+      {
+        "_path": "site-packages/tests/host_test.py",
+        "path_type": "hardlink",
+        "sha256": "55657565b04bf3b34e4609ace181d8b24909ae1e85280566f3d9aa5dd21dba63",
+        "sha256_in_prefix": "55657565b04bf3b34e4609ace181d8b24909ae1e85280566f3d9aa5dd21dba63",
+        "size_in_bytes": 1346
+      },
+      {
+        "_path": "site-packages/tests/lib_test.py",
+        "path_type": "hardlink",
+        "sha256": "e29d9f4ba0a88b68c371cf02e16c6508cce9faf18bf20b51658c93c8eceb955a",
+        "sha256_in_prefix": "e29d9f4ba0a88b68c371cf02e16c6508cce9faf18bf20b51658c93c8eceb955a",
+        "size_in_bytes": 12066
+      },
+      {
+        "_path": "site-packages/tests/tool_test.py",
+        "path_type": "hardlink",
+        "sha256": "e9b74880b68e6499e0962a0782d90daa32b5ade5da0278a65fb07f173add90ac",
+        "sha256_in_prefix": "e9b74880b68e6499e0962a0782d90daa32b5ade5da0278a65fb07f173add90ac",
+        "size_in_bytes": 4931
+      },
+      {
+        "_path": "bin/pyjson5",
+        "path_type": "unix_python_entry_point"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/__init__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/__main__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/arg_parser.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/host.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/lib.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/parser.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/tool.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/json5/__pycache__/version.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/tests/__pycache__/__init__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/tests/__pycache__/host_fake.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/tests/__pycache__/host_test.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/tests/__pycache__/lib_test.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.7/site-packages/tests/__pycache__/tool_test.cpython-37.pyc",
+        "path_type": "pyc_file"
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "None",
+  "size": 24412,
+  "subdir": "noarch",
+  "timestamp": 1562600300845,
+  "track_features": "",
+  "url": "https://conda.anaconda.org/conda-forge/noarch/json5-0.8.5-py_0.tar.bz2",
+  "version": "0.8.5"
+}
