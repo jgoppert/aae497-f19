@@ -122,16 +122,23 @@ public:
         double dy = position.y - m_center.y;
         double d = sqrt(dx*dx + dy*dy);
         double rq = sqrt(2)*m_size;
+        bool overlap = d < radius + rq;        
         
         // when resolution is reached, stop dividing
 
         std::list<Landmark> close_landmarks;
         // how to check if a subtree is allocated
-        if (m_NE.get()) m_NE->search(position, radius);
 
-            // then NE quad has been alocated and contains at least one landmark
+        if (m_size < m_resolution)
+        {
+            for (auto i:m_landmarks) close_landmarks.push_front(i);
+            return close_landmarks;   
+        }  
+        if (m_NE.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_NE->search(position,radius));
+        if (m_NW.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_NW->search(position,radius));
+        if (m_SE.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_SE->search(position,radius));
+        if (m_SW.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_SW->search(position,radius));
 
-        /* write your code here */
         return close_landmarks;
     }
 
@@ -220,7 +227,7 @@ int main(int argc, char const *argv[])
 
     // quadtree search
     std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius); // TODO: return the list of landmarks you care about, but with faster search time
-    std::cout << "quadtree searching";
+    std::cout << "quadtree searching" << std::endl;
     start = std::chrono::high_resolution_clock::now();
     for (auto &lm : close_landmarks_quadtree)
     {
