@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+#include <string>
+#include <list>
+#include <iostream>
+
+class Movie {
+public:
+    Movie(std::string title) : m_title(title) {}
+    virtual ~Movie() {};
+    std::string m_title{""};
+=======
 #include <iostream>
 #include <vector>
 #include <list>
@@ -22,10 +33,26 @@ public:
     }
     virtual ~Movie() {
     }
+>>>>>>> eb4087acefb7e3964fbf7138371e79e42431d5e2
 };
 
 int main(int argc, char const *argv[])
 {
+<<<<<<< HEAD
+    /* code */
+    Movie m1("movie 1");
+    Movie m2("movie 2");
+
+    std::list<Movie *> database;
+    database.emplace_back(&m1);
+    database.emplace_back(&m2);
+
+    for (auto movie: database) {
+        std::cout << movie->m_title << std::endl;
+    }
+    return 0;
+}
+=======
     auto m1 = std::make_shared<Movie>("Monty Python and the Holy Grail",
         1975, 8.5, {"Graham Chapman", "John Cleese"}, "Comedy");
     auto m2 = std::maked_shared<Movie>("Aliens",
@@ -40,3 +67,4 @@ int main(int argc, char const *argv[])
     /* code */
     return 0;
 }
+>>>>>>> eb4087acefb7e3964fbf7138371e79e42431d5e2
