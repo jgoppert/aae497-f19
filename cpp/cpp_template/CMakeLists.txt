@@ -10,9 +10,12 @@ add_executable(hello_world hello_world.cpp)
 
 add_executable(my_test my_test.cpp)
 
+<<<<<<< HEAD
+=======
 add_executable(objects objects.cpp)
 add_executable(templates templates.cpp)
 
+>>>>>>> eb4087acefb7e3964fbf7138371e79e42431d5e2
 add_executable(movies movies.cpp)
 
 # my gazebo plugin

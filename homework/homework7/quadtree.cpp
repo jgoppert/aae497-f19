@@ -8,6 +8,8 @@
 #include <ctime>   /* time */
 #include <cmath>   /* sqrt */
 #include <chrono>
+#include <iostream>
+#include <fstream>
 
 struct Position
 {
@@ -56,10 +58,7 @@ public:
     {
         double tol = 1e-5;
         return (
-            (p.x > (m_center.x - m_size - tol))
-            && (p.x < (m_center.x + m_size + tol))
-            && (p.y > (m_center.y - m_size - tol))
-            && (p.y < (m_center.y + m_size + tol)));
+            (p.x > (m_center.x - m_size - tol)) && (p.x < (m_center.x + m_size + tol)) && (p.y > (m_center.y - m_size - tol)) && (p.y < (m_center.y + m_size + tol)));
     }
     /**
      * Allows landmark insertion into QuadTree
@@ -80,7 +79,6 @@ public:
         if (m_size < m_resolution)
         {
             m_landmarks.push_back(lm);
-            //std::cout << "resolution reached, adding landmark: " << m_landmarks.size() << std::endl;
         }
         else
         {
@@ -119,9 +117,28 @@ public:
      * that are within the search radius.
      **/
     std::list<Landmark> search(const Position &position, double radius)
-    {
+    {   
+        double dx = position.x - m_center.x;
+        double dy = position.y - m_center.y;
+        double d = sqrt(dx*dx + dy*dy);
+        double rq = sqrt(2)*m_size;
+        bool overlap = d < radius + rq;        
+        
+        // when resolution is reached, stop dividing
+
         std::list<Landmark> close_landmarks;
-		// just fill in your logic here
+        // how to check if a subtree is allocated
+
+        if (m_size < m_resolution)
+        {
+            for (auto i:m_landmarks) close_landmarks.push_front(i);
+            return close_landmarks;   
+        }  
+        if (m_NE.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_NE->search(position,radius));
+        if (m_NW.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_NW->search(position,radius));
+        if (m_SE.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_SE->search(position,radius));
+        if (m_SW.get() && overlap) close_landmarks.splice(close_landmarks.end(),m_SW->search(position,radius));
+
         return close_landmarks;
     }
 
@@ -148,13 +165,12 @@ int main(int argc, char const *argv[])
 {
     srand(1234); // seed random number generator
 
-    Position center{0, 0}; // center of space
-    double size = 1000;       // size of space
-    double resolution = 1; // smallest cell in quadtree
-    int n_landmarks = 1000;  // number of landmarks
+    Position center{0, 0};  // center of space
+    double size = 1000;     // size of space
+    double resolution = 1;  // smallest cell in quadtree
+    int n_landmarks = 1000; // number of landmarks
     QuadTree tree(center, size, resolution);
     double search_radius = 50.0; // radius we want to find landmarks within
-    std::cout << "size: " << size << " resolution: " << resolution << " n_landmarks: " << n_landmarks <<  std::endl;
 
     // create random landmarks
     std::list<Landmark> landmarks;
@@ -163,9 +179,9 @@ int main(int argc, char const *argv[])
         float x = size * 2 * (double(rand()) / RAND_MAX - 0.5);
         float y = size * 2 * (double(rand()) / RAND_MAX - 0.5);
         //std::cout << "inserting landmark id: " << id << " x: " << x << " y: " << y << std::endl;
-        landmarks.push_back(Landmark{x, y, id});
+        landmarks.push_back(Landmark{x, y, id}); // creates new landmark with position and id
     }
-    std::cout << "created " << landmarks.size() << " landmarks" << std::endl;
+    std::cout << "created " << landmarks.size() << " landmarks" << std::endl; // how many landmarks are created
 
     // where you are
     float x = size * 2 * (double(rand()) / RAND_MAX - 0.5);
@@ -178,12 +194,12 @@ int main(int argc, char const *argv[])
     auto start = std::chrono::high_resolution_clock::now();
     for (auto &lm : landmarks)
     {
-        float dx = vehicle_position.x - lm.pos.x;
-        float dy = vehicle_position.y - lm.pos.y;
-        float d = sqrt(dx * dx + dy * dy);
+        double dx = vehicle_position.x - lm.pos.x;
+        double dy = vehicle_position.y - lm.pos.y;
+        double d = sqrt(dx * dx + dy * dy);
         if (d < search_radius)
         {
-            close_landmarks_brute_force.push_back(lm);
+            close_landmarks_brute_force.push_back(lm); // list of landmarks you care about (within the range)
         }
     }
     double elapsed_brute_force_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -210,18 +226,21 @@ int main(int argc, char const *argv[])
     std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
     // quadtree search
-    std::cout << "quadtree searching";
+    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius); // TODO: return the list of landmarks you care about, but with faster search time
+    std::cout << "quadtree searching" << std::endl;
     start = std::chrono::high_resolution_clock::now();
-    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
-    double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                         std::chrono::high_resolution_clock::now() - start)
-                                         .count();
-    std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
     for (auto &lm : close_landmarks_quadtree)
     {
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
+    double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                         std::chrono::high_resolution_clock::now() - start)
+                                         .count();
+    std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
 
-    std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;
+    // std::ofstream myfile;
+    // myfile.open("example.txt")
+
+    /* code */
     return 0;
 }

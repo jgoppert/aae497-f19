@@ -234,6 +234,7 @@ void RocketPlugin::Update(const common::UpdateInfo &/*_info*/)
     gzdbg << "mass: " << m << std::endl;
     gzdbg << "force: " << F_FLT[0] << " " << F_FLT[1] << " " << F_FLT[2] << std::endl;
     gzdbg << "moment: " << M_FLT[0] << " " << M_FLT[1] << " " << M_FLT[2] << std::endl;
+    gzdbg << "rate: " << dt << std::endl << std::endl;
 
     // apply forces and moments
     for (int i=0; i<3; i++) {
