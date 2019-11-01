@@ -121,7 +121,36 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-		// just fill in your logic here
+		
+        double dx = m_center.x-position.x;
+        double dy = m_center.y-position.y;
+        bool overlap = (sqrt(dx*dx+dy*dy) < (radius+m_size*sqrt(2)));
+      
+        if(m_landmarks.size() > 0)
+        {
+            return m_landmarks;
+        }
+        
+        if(m_NE.get() && overlap ) 
+        {
+            close_landmarks.splice(close_landmarks.end(),m_NE->search(position,radius));
+        }
+        
+        if(m_SE.get() && overlap) 
+        {
+            close_landmarks.splice(close_landmarks.end(),m_SE->search(position,radius));
+        }
+        
+        if(m_NW.get() && overlap) 
+        {
+            close_landmarks.splice(close_landmarks.end(),m_NW->search(position,radius));
+        }
+        
+        if(m_SW.get() && overlap) 
+        {
+            close_landmarks.splice(close_landmarks.end(),m_SW->search(position,radius));
+        }
+
         return close_landmarks;
     }
 
@@ -146,6 +175,9 @@ private:
 
 int main(int argc, char const *argv[])
 {
+    int i;
+    double elap_quad_t[40];
+    
     srand(1234); // seed random number generator
 
     Position center{0, 0}; // center of space
@@ -190,7 +222,7 @@ int main(int argc, char const *argv[])
                                             std::chrono::high_resolution_clock::now() - start)
                                             .count();
     std::cout << "search landmarks brute force,\telapsed time "
-              << elapsed_brute_force_search << " ns" << std::endl;
+            << elapsed_brute_force_search << " ns" << std::endl;
     // output close landmarks
     for (auto &lm : close_landmarks_brute_force)
     {
@@ -205,8 +237,8 @@ int main(int argc, char const *argv[])
         tree.insert(lm);
     }
     double elapsed_quadtree_insert = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                         std::chrono::high_resolution_clock::now() - start)
-                                         .count();
+                                        std::chrono::high_resolution_clock::now() - start)
+                                        .count();
     std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
     // quadtree search
@@ -214,14 +246,17 @@ int main(int argc, char const *argv[])
     start = std::chrono::high_resolution_clock::now();
     std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
     double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                         std::chrono::high_resolution_clock::now() - start)
-                                         .count();
+                                        std::chrono::high_resolution_clock::now() - start)
+                                        .count();
     std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
+
     for (auto &lm : close_landmarks_quadtree)
     {
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
 
     std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;
+    
+
     return 0;
 }
