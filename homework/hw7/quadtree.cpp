@@ -122,7 +122,24 @@ public:
     {
         std::list<Landmark> close_landmarks;
 		// just fill in your logic here
+        double dx = position.x - m_center.x;
+        double dy = position.y - m_center.y;
+        double d = sqrt(dx * dx + dy *dy);
+        double rq = sqrt(2) * m_size;
+
+        if(m_size < m_resolution)
+        {
+            for(auto i:m_landmarks) close_landmarks.push_front(i);
+            return close_landmarks;
+        }
+
+        if (m_NE.get() && abs(d)<(radius+rq)) close_landmarks.splice(close_landmarks.end(),m_NE -> search(position,radius));
+        if (m_NW.get() && abs(d)<(radius+rq)) close_landmarks.splice(close_landmarks.end(),m_NW -> search(position,radius));
+        if (m_SE.get() && abs(d)<(radius+rq)) close_landmarks.splice(close_landmarks.end(),m_SE -> search(position,radius));
+        if (m_SW.get() && abs(d)<(radius+rq)) close_landmarks.splice(close_landmarks.end(),m_SW -> search(position,radius));
+        
         return close_landmarks;
+
     }
 
 private:
@@ -154,6 +171,9 @@ int main(int argc, char const *argv[])
     int n_landmarks = 1000;  // number of landmarks
     QuadTree tree(center, size, resolution);
     double search_radius = 50.0; // radius we want to find landmarks within
+    std::list<double> sol_list = {0};
+    std::list<double> time_list = {0};
+
     std::cout << "size: " << size << " resolution: " << resolution << " n_landmarks: " << n_landmarks <<  std::endl;
 
     // create random landmarks
@@ -217,11 +237,26 @@ int main(int argc, char const *argv[])
                                          std::chrono::high_resolution_clock::now() - start)
                                          .count();
     std::cout << ",\t\telapsed time " << elapsed_quadtree_search << " ns" << std::endl;
+   
+    sol_list.push_back(resolution);
+    time_list.push_back(elapsed_quadtree_search);
     for (auto &lm : close_landmarks_quadtree)
     {
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
+    sol_list.push_back(resolution);
+    time_list.push_back(elapsed_quadtree_search);
+    freopen ("quad_out.txt","w", stdout);
+    std::list<double>::iterator sol = sol_list.begin();
+    std::list<double>::iterator tim = time_list.begin();
+    for(int i = 0; i < 99; i++)
+    {
+        std::advance(sol, 1);
+        std::advance(tim, 1);
+        std::cout << *tim << " " << *sol << std::endl;
 
-    std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;
+    }
+    
+    /*std::cout << "quadtree speed up: " << elapsed_brute_force_search/elapsed_quadtree_search << std::endl;*/
     return 0;
 }
