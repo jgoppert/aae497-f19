@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/sidharthprasad/aae497-f19/homework/hw7/quadtree.cpp
+memory
+-
+iostream
+-
+list
+-
+sstream
+-
+exception
+-
+cstdlib
+-
+ctime
+-
+cmath
+-
+chrono
+-
+

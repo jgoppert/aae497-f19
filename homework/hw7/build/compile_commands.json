@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/sidharthprasad/aae497-f19/homework/hw7/build",
+  "command": "/usr/bin/g++-7    -g   -o CMakeFiles/quadtree.dir/quadtree.cpp.o -c /home/sidharthprasad/aae497-f19/homework/hw7/quadtree.cpp",
+  "file": "/home/sidharthprasad/aae497-f19/homework/hw7/quadtree.cpp"
+}
+]

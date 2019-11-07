@@ -1,0 +1,3 @@
+/home/sidharthprasad/aae497-f19/homework/hw7/build/CMakeFiles/rebuild_cache.dir
+/home/sidharthprasad/aae497-f19/homework/hw7/build/CMakeFiles/quadtree.dir
+/home/sidharthprasad/aae497-f19/homework/hw7/build/CMakeFiles/edit_cache.dir
