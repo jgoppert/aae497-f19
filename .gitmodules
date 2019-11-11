@@ -4,3 +4,6 @@
 [submodule "python/pyecca"]
 	path = python/pyecca
 	url = https://github.com/jgoppert/pyecca
+[submodule "ros/src/px4"]
+	path = ros/src/px4
+	url = https://github.com/PX4/Firmware
