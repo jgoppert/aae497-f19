@@ -230,9 +230,14 @@ int main(int argc, char const *argv[])
     std::cout << ",\telapsed time " << elapsed_quadtree_insert << " ns" << std::endl;
 
     // quadtree search
+    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
     std::cout << "quadtree searching";
     start = std::chrono::high_resolution_clock::now();
-    std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);
+    for (auto &lm : close_landmarks_quadtree)
+    {
+        std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
+    }
+    /*std::list<Landmark> close_landmarks_quadtree = tree.search(vehicle_position, search_radius);*/
     double elapsed_quadtree_search = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                          std::chrono::high_resolution_clock::now() - start)
                                          .count();
@@ -240,10 +245,11 @@ int main(int argc, char const *argv[])
    
     sol_list.push_back(resolution);
     time_list.push_back(elapsed_quadtree_search);
-    for (auto &lm : close_landmarks_quadtree)
+    /*for (auto &lm : close_landmarks_quadtree)
     {
         std::cout << "id: " << lm.id << " x: " << lm.pos.x << " y: " << lm.pos.y << std::endl;
     }
+    */
     sol_list.push_back(resolution);
     time_list.push_back(elapsed_quadtree_search);
     freopen ("quad_out.txt","w", stdout);
