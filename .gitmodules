@@ -7,3 +7,6 @@
 [submodule "ros/src/px4"]
 	path = ros/src/px4
 	url = https://github.com/PX4/Firmware
+[submodule "ros/src/qualisys"]
+	path = ros/src/qualisys
+	url = git@github.com:jeffersonkim97/qualisys.git
