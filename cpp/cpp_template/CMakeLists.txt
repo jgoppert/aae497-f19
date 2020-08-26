@@ -9,6 +9,7 @@ find_package(gazebo)
 add_executable(hello_world hello_world.cpp)
 
 add_executable(my_test my_test.cpp)
+add_executable(movies movies.cpp)
 
 add_executable(objects objects.cpp)
 add_executable(templates templates.cpp)
