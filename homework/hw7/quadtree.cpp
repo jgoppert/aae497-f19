@@ -121,7 +121,16 @@ public:
     std::list<Landmark> search(const Position &position, double radius)
     {
         std::list<Landmark> close_landmarks;
-		// just fill in your logic here
+        if (m_size < m_resolution) close_landmarks.splice(close_landmarks.end(), std::list<Landmark>(m_landmarks));
+        auto loc = sqrt((m_center.x-position.x)*(m_center.x-position.x) + (m_center.y-position.y)*(m_center.y-position.y));
+        auto dist = radius + m_size*sqrt(2);
+        if(loc<dist){
+            if (m_NE.get()) close_landmarks.splice(close_landmarks.end(), m_NE->search(position, radius));
+            if (m_NW.get()) close_landmarks.splice(close_landmarks.end(), m_NW->search(position, radius));
+            if (m_SE.get()) close_landmarks.splice(close_landmarks.end(), m_SE->search(position, radius));
+            if (m_SW.get()) close_landmarks.splice(close_landmarks.end(), m_SW->search(position, radius));
+        }
+        
         return close_landmarks;
     }
 
