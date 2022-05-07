@@ -1,0 +1,2 @@
+﻿Time (s),ESC signal (µs),Servo 1 (µs),Servo 2 (µs),Servo 3 (µs),AccX (g),AccY (g),AccZ (g),Torque (N·m),Thrust (kgf),Voltage (V),Current (A),Motor Electrical Speed (RPM),Motor Optical Speed (RPM),Electrical Power (W),Mechanical Power (W),Motor Efficiency (%),Propeller Mech. Efficiency (kgf/W),Overall Efficiency (kgf/W),Vibration (g),App message,
+0.04909499999973923,1000,,,,-1.0625,0.01328125,0.01015625,-0.0032771225410751234,-0.039760884281478996,0.009011460886124879,-0.02308711904872963,0,0,0,0,0,0,0,0.080078125,,
