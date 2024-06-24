@@ -1,4 +1,4 @@
-# AAE497 Fall 2019 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jgoppert/aae497-f19/master) [<img src="https://jupyter.org/assets/main-logo.svg" height="20" title="JupyterLab">](https://mybinder.org/v2/gh/jgoppert/aae497-f19/master?urlpath=lab) [![nbviewer](https://img.shields.io/badge/view%20on-nbviewer-brightgreen.svg)](http://nbviewer.jupyter.org/github/jgoppert/aae497-f19/tree/master)
+# AAE497 Fall 2019 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/HenryTingle/aae497_f19/master) [<img src="https://jupyter.org/assets/main-logo.svg" height="20" title="JupyterLab">](https://mybinder.org/v2/gh/HenryTingle/aae497_f19/master?urlpath=lab) [![nbviewer](https://img.shields.io/badge/view%20on-nbviewer-brightgreen.svg)](http://nbviewer.jupyter.org/github/HenryTingle/aae497_f19/tree/master)
 
 Class notebook.
 
